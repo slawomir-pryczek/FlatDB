@@ -7,6 +7,7 @@ Firstly it's written from scratch, taking modern hardware specifications into ac
 It was created mainly to deal with limitations of memcached LRU algorithm and badly written memcache extensions for PHP.
 
 ## Main advantages
+- Server is written using 100% golang, can be easily compiled on serveral operating system
 - Native PHP Client, there's no extension required, you can just include everything required in your project manually or by using composer
 - Support for TCP and UDP protocols. UDP can be used to send non-important and diagnostic data into server
 - Supports HTTP for all operations, and comprehensive server status / statistics
