@@ -6,6 +6,7 @@ FlatDB is modern memcached replacement, which is designed to be ideal for dynami
 Firstly it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
 It was created mainly to deal with limitations of memcached LRU algorithm and badly written memcache extensions for PHP.
 
+## Main advantages
 - Native PHP Client, there's no extension required, you can just include everything required in your project manually or by using composer
 - Support for TCP and UDP protocols. UDP can be used to send non-important and diagnostic data into server
 - Supports HTTP for all operations, and comprehensive server status / statistics
@@ -20,3 +21,4 @@ It was created mainly to deal with limitations of memcached LRU algorithm and ba
 - Ability to get item TTL, increment / decrement operations which can, optionally set a new TTL
 - Get first key from set operation, will return first available item from set of keys
 - Peek operation, see which items are available without sending data
+- Support for large items, and variable size SLABs
