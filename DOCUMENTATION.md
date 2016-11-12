@@ -4,7 +4,7 @@ you'll need to add servers at the very beginning of your code
 because after making first connection in your script you won't be
 able to alter server config, as it could lead to keys being assigned
 to incorrect servers.
-```
+```php
 FlatDB::addServer('127.0.0.1', '7777');
 $fdb = new FlatDB();
 ```
@@ -22,7 +22,7 @@ default group will be used.
  
 _addServer( **$host**, **$port**, **$weight**=0, **$group**=false)_<br>__construct( $group = false)_
 
-```
+```php
 FlatDB::addServer('127.0.0.1', '7777');
 FlatDB::addServer('192.168.10.1', '7777', 5, 'caching-cluster');
 FlatDB::addServer('192.168.10.2', '7777', 5, 'caching-cluster');
@@ -110,7 +110,7 @@ using **$out_key**. It'll also return it's CAS Token in **$out_cas** and TTL tim
 _public function getMulti(array **$keys**)_
 
 Get values of all keys, or false... will return an array, each item will have its own row.
-```
+```php
 FlatDB::addServer('127.0.0.1', '7777');
 $fdb = new FlatDB();
 // add items
@@ -157,7 +157,7 @@ modifying function, it'll get current item's value and in return it should give 
 needs to be deleted. It can be called multiple times to re-calculate calue if item's value on server change between GET and SET.<br>
 It'll return new **$key**'s value or FALSE, and also you can get CAS Token assigned using **&$out_new_cas**
 
-```
+```php
 $x = $fdb->atomicSet("myitem", 10, function($val) {
     if ($val === false) // (A)
 	    return "start-";
