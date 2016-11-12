@@ -8,7 +8,7 @@
   "time": "2016-11-11",
   "autoload": {
     "psr-4": {"FlatDB\\":"php-client/FlatDB/"}
-  }
+  },
  
   "repositories": [{
     "type": "git",
