@@ -6,7 +6,7 @@
   "require": {"HSServer":"3.*"},
   
   "name": "FlatDB",
-	"description": "Memcached replacement written in golang, with PHP native client",
+	"description": "Memcached replacement and more, written in golang, with PHP native client",
 	"version": "3.001",
 	"type": "library",
 	"keywords": ["rpc", "sockets", "php", "golang", "rpc-server", "rpc-client"],
