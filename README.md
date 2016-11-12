@@ -13,10 +13,8 @@ For FlatDB php api you can [read documentation here](DOCUMENTATION.md)
 For installing client libraries using composer please add following lines to your composer.json, you can also download manually, in such case you'll need to download php-client directories from both FlatDB and HSServer projects.
 ```json
 {
-  "repositories": [{
-    "type": "git",
-    "url": "https://github.com/slawomir-pryczek/FlatDB"
-  }],
+  "repositories": [{"type": "git", "url": "https://github.com/slawomir-pryczek/FlatDB"},
+    {"type": "git", "url": "https://github.com/slawomir-pryczek/HSServer"}],
   
   "require": {"FlatDB":"3.*"}
 }
