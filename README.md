@@ -8,7 +8,9 @@ Firstly it's written from scratch, taking modern hardware specifications into ac
 It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcached extension for PHP7. It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
 
 # Requirements
-PHP7 for the client, golang 1.7 for compiling server, 32 bit compilation is **not supported** and the server compiled for 32 bit enviroments will likely segfault because it won't be able to allocate continuous blocks of memory. 
+- PHP7 for the client
+- golang 1.7 for compiling server
+- 32 bit compilation is **not supported** and the server compiled for 32 bit enviroments will likely segfault because it won't be able to allocate continuous blocks of memory. 
 
 ## Main advantages
 - Server is written using 100% golang, can be easily compiled on serveral operating system
@@ -27,3 +29,4 @@ PHP7 for the client, golang 1.7 for compiling server, 32 bit compilation is **no
 - Get first key from set operation, will return first available item from set of keys
 - Peek operation, see which items are available without sending data
 - Support for large items, and variable size SLABs
+- Can be compiled under x64 Windows
