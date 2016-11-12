@@ -8,13 +8,14 @@ Firstly it's written from scratch, taking modern hardware specifications into ac
 It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcached extension for PHP7. It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
 
 #Server Deployment
-You can deploy using just using <pre>./flatdb-linux64</pre>, please remember to enable execution bit using chmod.
+You can deploy using just using ```./flatdb-linux64```, please remember to enable execution bit using chmod.
  
 Production deployment with auto-restart
-<pre>
+```
 screen
 cd ./bin
-started=\`date +%Y%m%d@%H:%M\`; for i in {1..999999}; do ./flatdb-linux64 1>/dev/null 2>"error-$started-$i.log.txt"; sleep 10; done;</pre>
+started=\`date +%Y%m%d@%H:%M\`; for i in {1..999999}; do ./flatdb-linux64 1>/dev/null 2>"error-$started-$i.log.txt"; sleep 10; done;
+```
 
 If everything went ok you should be able to see server's status page: http://127.0.0.1:7778/?action=server-status
 
