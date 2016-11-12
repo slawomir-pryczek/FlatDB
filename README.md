@@ -7,6 +7,39 @@ Firstly it's written from scratch, taking modern hardware specifications into ac
 
 It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcached extension for PHP7. It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
 
+# Client Library - Usage
+For FlatDB php api you can [read documentation here](DOCUMENTATION.md)
+
+For installing client libraries using composer please add following lines to your composer.json, you can also download manually, in such case you'll need to download php-client directories from both FlatDB and HSServer projects.
+```json
+{
+  "repositories": [{
+    "type": "git",
+    "url": "https://github.com/slawomir-pryczek/FlatDB"
+  }],
+  
+  "require": {"FlatDB":"3.*"}
+}
+```
+
+After this is done, you need to following command from cmd line
+```php composer.phar install``` for help in composer installation, please follow this link https://getcomposer.org/download/
+
+This code will connect to the server and read/set some keys, make sure port and ip adress are correct
+```php
+<?php
+require __DIR__ . '/vendor/autoload.php';
+use FlatDB\FlatDB;
+
+FlatDB::addServer('192.168.10.1', '7777');
+
+$fdb = new FlatDB();
+$fdb->add('random 1', rand(1,99999), 5);
+$fdb->set('random 2', rand(1,99999), 5);
+echo $fdb->get('random 1').'<br>';
+echo $fdb->get('random 2');
+```
+
 # Requirements
 - PHP7 for the client
 - golang 1.7 for compiling server
