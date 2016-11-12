@@ -13,5 +13,5 @@
     "type": "git",
     "url": "https://github.com/slawomir-pryczek/HSServer"
   }],
-  "require": {"HSServer":"3.*"}
+  "require": {"HSServer":"3.001"}
 }
