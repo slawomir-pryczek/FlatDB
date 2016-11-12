@@ -1,13 +1,7 @@
 <?php
 
 namespace FlatDB;
-
-include_once __DIR__.'/HSClient.php';
-include_once __DIR__.'/HSClientUDP.php';
-include_once __DIR__.'/HSCommon.php';
-
 use HSS\HSClient;
-
 
 class FlatDB
 {
