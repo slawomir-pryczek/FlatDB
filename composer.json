@@ -8,11 +8,5 @@
   "time": "2016-11-11",
   "autoload": {
     "psr-4": {"FlatDB\\":"php-client/FlatDB/"}
-  },
- 
-  "repositories": [{
-    "type": "git",
-    "url": "https://github.com/slawomir-pryczek/HSServer"
-  }],
-  "require": {"HSServer":"3.001"}
+  }
 }
