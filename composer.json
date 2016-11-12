@@ -1,9 +1,8 @@
 {
-  "repositories": [
-  {
+  "repositories": [{
     "type": "git",
     "url": "https://github.com/slawomir-pryczek/HSServer"
-  },
+  }],
   "require": {"HSServer":"3.*"},
   
   "name": "FlatDB",
