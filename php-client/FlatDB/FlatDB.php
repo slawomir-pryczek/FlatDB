@@ -136,6 +136,11 @@ class FlatDB
 		$packet = ['action'=>'mc-add', 'k'=>$key, 'v'=>$value, 'e'=>$expire];
 		$head = [];
 		$ret = $client->sendData($packet, $head);
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			return false;
+		}
 		if (isset($head['mc-error']))
 		{
 			$this->last_error = $ret;
@@ -155,6 +160,11 @@ class FlatDB
 		$packet = ['action'=>'mc-rep', 'k'=>$key, 'v'=>$var, 'e'=>$expire];
 		$head = [];
 		$ret = $client->sendData($packet, $head);
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			return false;
+		}
 		if (isset($tmp['mc-error']) && $head['mc-error'])
 		{
 			$this->last_error = $ret;
@@ -176,7 +186,12 @@ class FlatDB
 			$packet['__skipsendback']=true;
 		$head = [];
 		$ret = $client->sendData($packet, $head);
-
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			return false;
+		}
+		
 		// check if the variable was actually set!
 		if ($safe === true && isset($head['mc-error']))
 		{
@@ -197,7 +212,11 @@ class FlatDB
 		$packet = ['action'=>'mc-touch', 'k'=>$key, 'e'=>$expire];
 		$head = [];
 		$ret = $client->sendData($packet, $head);
-		
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			return false;
+		}
 		if (isset($head['mc-error']))
 		{
 			$this->last_error = $ret;
@@ -215,7 +234,12 @@ class FlatDB
 		$packet = ['action'=>'mc-exists', 'k'=>$key];
 		$head = [];
 		$ret = $client->sendData($packet, $head);
-		
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			$out_ttl = false;
+			return false;
+		}
 		if (isset($head['mc-error']))
 		{
 			$this->last_error = $ret;
@@ -242,6 +266,11 @@ class FlatDB
 
 		$head = [];
 		$ret = $client->sendData($packet, $head);
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			return false;
+		}
 		if (isset($head['mc-error']))
 		{
 			$this->last_error = $ret;
@@ -266,6 +295,11 @@ class FlatDB
 
 		$head = [];
 		$ret = $client->sendData($packet, $head);
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			return false;
+		}
 		if (isset($head['mc-error']))
 		{
 			$this->last_error = $ret;
@@ -283,6 +317,11 @@ class FlatDB
 		$packet = ['action'=>'mc-del', 'k'=>$key];
 		$head = [];
 		$ret = $client->sendData($packet, $head);
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			return false;
+		}
 		if (isset($head['mc-error']))
 		{
 			$this->last_error = $ret;
@@ -305,7 +344,14 @@ class FlatDB
 
 		$head = [];
 		$ret = $client->sendData($packet, $head);
-
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			$out_cas = false;
+			$out_expires = false;
+			return false;
+		}
+		
 		if ($advanced)
 		{
 			if (isset($head['cas']) && isset($head['e']) && !isset($head['mc-error']))
@@ -449,8 +495,11 @@ class FlatDB
 		$head = [];
 		$ret = $client->sendData($packet, $head);
 		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
 			return [self::ADVI_CONN_ERROR];
-			
+		}
+		
 		$cas = false;
 		if (isset($head['cas']))
 			$cas = $head['cas'];
