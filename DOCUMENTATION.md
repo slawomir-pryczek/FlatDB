@@ -191,8 +191,9 @@ The **Swap** phase is using these 2 parameters<br>
 
 Return value:<br> 
 R1. If COMPARE phase **succeeds** and item value will be set to new one, in return you'll get [true, new_cas_token]<br> 
-R2. If COMPARE phase **fails** and item we work on is already existing in server - you'll get [error_code, current_value, current_cas] so you can re-calculate its new value<br> 
+R2. If COMPARE phase **fails** and item we work on is already existing in server - you'll get [error_code, current_cas, current_value] so you can re-calculate new value for item without issuing additional call to get its current cas/value<br> 
 R3. If COMPARE phase **fails** and item we work on doesn't exists on the server - you'll get [error_code, false, false], so you'll know that you need to use false for **$cas** to insert new item.  
+R4. For connection error you'll get just [error_code], which will be ADVI_CONN_ERROR
 
 Error codes:<br>
 ADVI_INSERT_CAS_MISMATCH - cas is not matching<br>
