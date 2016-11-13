@@ -22,7 +22,7 @@ func (this *HandleStore) Info() string {
 
 func (this *HandleStore) GetActions() []string {
 	return []string{"mc-get", "mc-set", "mc-add", "mc-del", "mc-rep", "mc-touch",
-		"mc-inc", "mc-dec", "mc-eget",
+		"mc-inc", "mc-dec", "mc-exists",
 		"mca-get", "mca-insert", "mca-mget", "mca-fget", "mca-fpeek",
 		"mc-maint"}
 }
@@ -369,7 +369,7 @@ func (this *HandleStore) HandleAction(action string, data *handler_socket2.HSPar
 		return string(ret)
 	}
 
-	if action == "mc-eget" {
+	if action == "mc-exists" {
 		k := data.GetParam("k", "")
 		if k == "" {
 			return "Please specify k, item key "

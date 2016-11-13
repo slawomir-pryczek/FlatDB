@@ -114,7 +114,7 @@ func OpGetExpires(key string) uint32 {
 	item := getStoredItemUnsafe(kvs, key, false)
 
 	ret := uint32(0)
-	if item.Exists() {
+	if item != nil && item.Exists() {
 		ret = item.Expires
 	}
 	kvstores[kvs_num].mu.RUnlock()
