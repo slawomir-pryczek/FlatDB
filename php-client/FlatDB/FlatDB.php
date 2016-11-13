@@ -215,10 +215,11 @@ class FlatDB
 		$packet = ['action'=>'mc-exists', 'k'=>$key];
 		$head = [];
 		$ret = $client->sendData($packet, $head);
-
+		
 		if (isset($head['mc-error']))
 		{
 			$this->last_error = $ret;
+			$out_ttl = false;
 			return false;
 		}
 
@@ -461,7 +462,7 @@ class FlatDB
 				$value = $ret;
 			
 			$this->last_error = "atomic set error, {$head['mc-error']}";
-			return [$head['mc-error'], $value, $cas];
+			return [$head['mc-error'], $cas, $value];
 		}
 
 		$this->last_error = false;
@@ -489,9 +490,9 @@ class FlatDB
 			
 			if ($result[0] !== self::ADVI_INSERT_CAS_MISMATCH)
 				return false;
-			
-			$curr_value = $result[1];
-			$curr_cas = $result[2];
+
+			$curr_cas = $result[1];
+			$curr_value = $result[2];
 		}
 		
 		return false;
