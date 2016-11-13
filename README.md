@@ -1,7 +1,7 @@
 # FlatDB
 
 
-FlatDB is modern memcached replacement, which is designed to be ideal for dynamic web applications.
+FlatDB is modern memcached replacement, which is designed to be ideal for dynamic web applications. You can compile the server using scripts found in /bin directory, also precompiled server is available as "Release", please go to Release tab if you prefer to use precompiled version. PHP Client can be installed using composer.
 
 <center>
 <img src="./bin/img/screen-main.png" alt="Server status - summary" width='280'>&nbsp;
