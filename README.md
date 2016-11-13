@@ -3,6 +3,12 @@
 
 FlatDB is modern memcached replacement, which is designed to be ideal for dynamic web applications.
 
+<center>
+<img src="./bin/screen-main.png" alt="Server status - summary" width='280'>&nbsp;
+<img src="./bin/screen-slab.png" alt="Server status - slab and item info" width='280'>&nbsp;
+<img src="./bin/screen-hashtable.png" alt="Server status - slab and item info" width='280'>&nbsp;
+</center>
+
 Firstly it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
 
 It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcached extension for PHP7. It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
