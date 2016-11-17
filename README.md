@@ -1,17 +1,21 @@
 # FlatDB
 
 
-FlatDB is modern memcached replacement, which is designed to be ideal for dynamic web applications.
+FlatDB is modern memcached replacement, which is designed to be ideal for dynamic web applications. You can compile the server using scripts found in /bin directory, also precompiled server is available as "Release", please go to Release tab if you prefer to use precompiled version. PHP Client can be installed using composer.
 
 <center>
 <img src="./bin/img/screen-main.png" alt="Server status - summary" width='280'>&nbsp;
 <img src="./bin/img/screen-slab.png" alt="Server status - slab and item info" width='280'>&nbsp;
-<img src="./bin/img/screen-hashtable.png" alt="Server status - slab and item info" width='280'>&nbsp;
+<img src="./bin/img/screen-hashtable.png" alt="Server status - slab and item info" width='280'>
 </center>
 
 Firstly it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
 
-It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcached extension for PHP7. It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
+It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcache**d** extension for PHP7 (working memcache extension is available, tho). It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
+
+
+<img src="./bin/img/screen-graph-keysv.png" alt="Server status - slab and item info" width='800'><br>
+_Benchmark using PHP7, 2-250 byte items, 2xIntel(R) Xeon(R) CPU E5-2660 v3 @ 2.60GHz, Client and Server on the same machine. Click to see more [Benchmarks](BENCHMARKS.md)_
 
 #Server Deployment
 You can deploy using just using ```./flatdb-linux64```, please remember to enable execution bit using chmod.

@@ -23,7 +23,7 @@ func (this *HandleStore) Info() string {
 func (this *HandleStore) GetActions() []string {
 	return []string{"mc-get", "mc-set", "mc-add", "mc-del", "mc-rep", "mc-touch",
 		"mc-inc", "mc-dec", "mc-exists",
-		"mca-get", "mca-insert", "mca-mget", "mca-fget", "mca-fpeek",
+		"mca-get", "mca-insert", "mca-mget", "mca-fget", "mca-fpeek", "mca-cache",
 		"mc-maint"}
 }
 
@@ -132,6 +132,60 @@ func (this *HandleStore) HandleAction(action string, data *handler_socket2.HSPar
 
 		data.SetRespHeader("mc-error", "1")
 		return "error:notfound"
+	}
+
+	if action == "mca-cache" {
+
+		k := data.GetParam("k", "")
+		ret, cas, expire := ops.OpAdvancedGetKey(k, func(size int) []byte {
+			if size < 256 {
+				return make([]byte, 0, size)
+			}
+			return data.Allocate(size)
+		})
+
+		r_, _ := strconv.ParseUint(data.GetParam("refresh", ""), 10, 32)
+		refresh := int(r_)
+		if refresh <= 0 {
+			data.SetRespHeader("mc-error", "1")
+			return "Please provide refresh time ... if TTL is < than refresh, then TTL will be set to refresh+1" +
+				"and you'll get refresh=1, in header ... to indicate you need to generate the data again"
+		}
+
+		if ret == nil {
+			data.SetRespHeader("mc-error", "1")
+			return ""
+		}
+
+		ts_now := common.TSNow()
+		ttl := int(expire) - ts_now
+
+		_limiter := "~/l82im~" + k + strconv.Itoa(int(cas))
+		_limiter_t := uint32(ts_now + (refresh / 2))
+		if _limiter_t < 1 {
+			_limiter_t = 1
+		}
+		if ttl < refresh && ops.OpAddKey(_limiter, []byte{}, uint32(_limiter_t)) {
+
+			// we make action 2 times for each refresh period, to be sure we generated new data
+			data.SetRespHeader("refresh", "1")
+
+			// be sure we can update TTL, we do that only ONCE...
+			// so if the item won't update we let it "die"
+			_limiter = _limiter + "|"
+			if ops.OpAddKey(_limiter, []byte{}, uint32(ts_now+refresh+5)) {
+
+				// update TTL if the item wasn't updated in the meantime,
+				// only ONCE per CAS, so after we generate new item, we'll be allowed to do it again!
+				ops.OpTouch___NoCasUpdate(k, uint32(ts_now+refresh), &cas)
+				ttl = refresh
+			}
+		}
+
+		data.SetRespHeader("cas", strconv.Itoa(int(cas)))
+		data.SetRespHeader("e", strconv.Itoa(ttl))
+		data.FastReturnBNocopy(ret)
+		return ""
 	}
 
 	if action == "mca-get" {

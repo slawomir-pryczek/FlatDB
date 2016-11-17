@@ -225,7 +225,16 @@ func (this *slab) ReadCAS(chunk_id uint16) (uint32, bool) {
 	return _cas, true
 }
 
+func (this *slab) Touch___NoCasUpdate(chunk_id uint16, cas uint32, expires uint32) bool {
+	ret, _ := this.__touch_op(chunk_id, cas, expires, false)
+	return ret
+}
+
 func (this *slab) Touch(chunk_id uint16, cas uint32, expires uint32) (bool, uint32) {
+	return this.__touch_op(chunk_id, cas, expires, true)
+}
+
+func (this *slab) __touch_op(chunk_id uint16, cas uint32, expires uint32, update_cas bool) (bool, uint32) {
 
 	this.mu.Lock()
 	memory := this.getChunkMemoryPtr(chunk_id)
@@ -251,9 +260,12 @@ func (this *slab) Touch(chunk_id uint16, cas uint32, expires uint32) (bool, uint
 		return false, 0
 	}
 
-	cas_new := GetNewCAS()
+	cas_new := uint32(0)
+	if update_cas {
+		cas_new = GetNewCAS()
+		binary.LittleEndian.PutUint32(memory[CHUNK_POS_CAS:CHUNK_POS_CAS+4], cas_new)
+	}
 	binary.LittleEndian.PutUint32(memory[CHUNK_POS_EXPIRES:CHUNK_POS_EXPIRES+4], uint32(expires))
-	binary.LittleEndian.PutUint32(memory[CHUNK_POS_CAS:CHUNK_POS_CAS+4], cas_new)
 
 	// Report new expire time to GC, so we can optimize GCs better!
 	this.elxGCReportExpire(chunk_id, expires)

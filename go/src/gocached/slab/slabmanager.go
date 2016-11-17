@@ -387,6 +387,20 @@ func (this *StoredItem) Delete() {
 
 }
 
+func (this *StoredItem) Touch___NoCasUpdate(expires uint32) bool {
+
+	slab_class := getSlabClass(int(this.slab_class_no))
+	slab_class.mu.RLock()
+	if int(this.slab_no) >= len(slab_class.slabs) {
+		slab_class.mu.RUnlock()
+		return false
+	}
+	slab := slab_class.slabs[this.slab_no]
+	slab_class.mu.RUnlock()
+
+	return slab.Touch___NoCasUpdate(this.chunk_no, this.CAS, expires)
+}
+
 func (this *StoredItem) Touch(expires uint32) (bool, uint32) {
 
 	slab_class := getSlabClass(int(this.slab_class_no))
