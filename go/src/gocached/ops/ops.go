@@ -122,6 +122,24 @@ func OpGetExpires(key string) uint32 {
 	return ret
 }
 
+func OpGetCAS(key string) uint32 {
+
+	cs := crc32.ChecksumIEEE([]byte(key))
+	kvs_num := int(cs) % len(kvstores)
+
+	kvstores[kvs_num].mu.RLock()
+	kvs := kvstores[kvs_num]
+	item := getStoredItemUnsafe(kvs, key, false)
+
+	ret := uint32(0)
+	if item != nil && item.Exists() {
+		ret = item.CAS
+	}
+	kvstores[kvs_num].mu.RUnlock()
+
+	return ret
+}
+
 func OpDelete(key string) bool {
 
 	cs := crc32.ChecksumIEEE([]byte(key))
@@ -335,7 +353,7 @@ func OpArithmetics(key string, data []byte, increment bool, expires *uint32) []b
 	return value
 }
 
-func OpTouch(key string, expires uint32, cas *uint32) bool {
+func OpTouch___NoCasUpdate(key string, expires uint32, cas *uint32) bool {
 
 	cs := crc32.ChecksumIEEE([]byte(key))
 	kvs_num := int(cs) % len(kvstores)
@@ -345,7 +363,32 @@ func OpTouch(key string, expires uint32, cas *uint32) bool {
 
 	kvs := kvstores[kvs_num]
 	item := getStoredItemUnsafe(kvs, key, false)
+
 	if item == nil || (cas != nil && *cas != item.CAS) {
+		return false
+	}
+
+	if ok := item.Touch___NoCasUpdate(expires); ok {
+		item.Expires = expires
+		kvs.key_map[key] = *item
+		return true
+	}
+
+	return false
+
+}
+
+func OpTouch(key string, expires uint32, in_out_cas *uint32) bool {
+
+	cs := crc32.ChecksumIEEE([]byte(key))
+	kvs_num := int(cs) % len(kvstores)
+
+	kvstores[kvs_num].mu.Lock()
+	defer kvstores[kvs_num].mu.Unlock()
+
+	kvs := kvstores[kvs_num]
+	item := getStoredItemUnsafe(kvs, key, false)
+	if item == nil || (in_out_cas != nil && *in_out_cas != item.CAS) {
 		return false
 	}
 
@@ -387,6 +430,10 @@ func OpTouch(key string, expires uint32, cas *uint32) bool {
 
 		item.Expires = expires
 		item.CAS = new_cas
+		if in_out_cas != nil {
+			*in_out_cas = new_cas
+		}
+
 		kvs.key_map[key] = *item
 		return true
 	}
