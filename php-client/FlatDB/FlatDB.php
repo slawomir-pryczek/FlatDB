@@ -546,5 +546,47 @@ class FlatDB
 		
 		return false;
 	}
+	
+	private $cacheShouldRegenerate = false;
+	public function cacheGet($key, $refresh_time, &$out_cas, &$out_expires)
+	{
+		$client = $this->getClient($key);
+
+		$packet = ['action'=>'mca-cache', 'k'=>$key, 'refresh'=>$refresh_time];
+		$head = [];
+		$ret = $client->sendData($packet, $head);
+		if ($ret === false)
+		{
+			$this->last_error = "Connection error";
+			$out_cas = false;
+			$out_expires = false;
+			$this->cacheShouldRegenerate = false;
+			return false;
+		}
+
+		if (isset($head['mc-error']))
+		{
+			$this->last_error = "Connection error";
+			$out_cas = false;
+			$out_expires = false;
+			$this->cacheShouldRegenerate = false;
+			return false;
+		}
+
+		// return CAS and expires
+		$out_cas = $head['cas'];
+		$out_expires = $head['e'];
+		
+		$this->last_error = false;
+		$this->cacheShouldRegenerate = false;
+		if (isset($head['refresh']) && $head['refresh'] == 1)
+			$this->cacheShouldRegenerate = true;
+		return $ret;
+	}
+
+	public function cacheShouldRefresh()
+	{
+		return $this->cacheShouldRegenerate;
+	}
 }
 
