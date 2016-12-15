@@ -19,7 +19,7 @@ class TestCache extends TestCase
 		$out = [];
 		$cas_1 = [];
 		$cas_2 = [];
-		while (time() - $start < 9)
+		while (time() - $start <= 7)
 		{
 			$fdb->cacheGet($key, 2, $cas, $e);
 			if ($fdb->cacheShouldRefresh())
@@ -38,7 +38,7 @@ class TestCache extends TestCase
 			if ($cas !== false)
 				$cas_2[$cas] = true;
 		}
-
+		
 		$this->assertEquals(1, count($cas_1));
 		$this->assertEquals(3, count($cas_2));
 		$this->assertEquals(3, count($out));

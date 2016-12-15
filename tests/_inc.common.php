@@ -180,7 +180,7 @@ function progressReport($prg)
 		return;
 	}
 	
-	if ($max < 300)
+	if ($max < 30)
 		return;
 
 	$progress = ( $prg * 1000 / $max );

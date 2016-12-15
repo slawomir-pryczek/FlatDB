@@ -111,6 +111,28 @@ class FlatDB
 		self::$conncache[$key] = $ret;
 		return $ret;
 	}
+	
+	function getClientN($number = false)
+	{
+		$ret = [];
+		foreach ($this->servers as $num=>$use)
+		{
+			if ($number != false && $number != $num)
+				continue;
+			
+			$key = "{$use[0]}:{$use[1]}";
+			if (isset(self::$conncache[$key]))
+				$ret[] = self::$conncache[$key];
+			else
+			{
+				$_tmp = new HSClient($use[0], $use[1]);
+				self::$conncache[$key] = $_tmp;
+				$ret[] = $_tmp;
+			}
+		}
+		
+		return $ret;
+	}
 
 	public function setOption( $option, $value )
 	{
@@ -118,11 +140,6 @@ class FlatDB
 	}
 
 	public function setOptions( $options )
-	{
-		return true;
-	}
-
-	public function flush( )
 	{
 		return true;
 	}
@@ -587,6 +604,37 @@ class FlatDB
 	public function cacheShouldRefresh()
 	{
 		return $this->cacheShouldRegenerate;
+	}
+	
+	public function runMaintenance($operation, $other_parameters = [])
+	{
+		if (!is_array($other_parameters))
+			$other_parameters = [];
+		
+		$packet = $other_parameters;
+		$packet['action'] = 'mc-maint';
+		$packet['op'] = $operation;
+		
+		$ret = [];
+		foreach ($this->getClientN() as $num => $client)
+		{
+			$head = [];
+			$r = $client->sendData($packet, $head);
+			if ($r === false)
+			{
+				$ret[] = ['error'=>'Connection error', 'head'=>[], 'has_error'=>true];
+				continue;
+			}
+			if (isset($head['mc-error']))
+			{
+				$ret[] = ['error'=>$r, 'head'=>$head, 'has_error'=>true];
+				continue;
+			}
+			
+			$ret[] = ['ret'=>$r, 'head'=>$head];
+		}
+		
+		return $ret;
 	}
 }
 
