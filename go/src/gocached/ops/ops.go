@@ -14,6 +14,7 @@ import (
 type kvstore struct {
 	key_map     map[string]slab.StoredItem
 	key_map_old map[string]slab.StoredItem
+	sync_key    map[string]byte
 
 	stat_gc_passes    int
 	stat_gc_kept      int
@@ -172,6 +173,11 @@ func OpDelete(key string) bool {
 			//delete(kvstores[kvs_num].key_map_old, key) ... we cannot do any writes to key_map_old
 			item.Delete()
 		}
+
+		// replication support
+		if true || existed {
+			_replication_delete(kvs, key)
+		}
 	}
 
 	kvs.stat_delete++
@@ -198,14 +204,20 @@ func OpSetKey(key string, data []byte, expires uint32) bool {
 		}
 		// <<
 
+		// need to delete previous item from SLAB, because if new TTL is lower than OLD
+		// then hash map could keep pointing to ip ( because we're using CURRENT-OLD hashmaps)
 		item.Delete()
 	}
 
 	tmp := slab.Store(data, expires)
 	if tmp != nil {
 		kvs.key_map[key] = *tmp
+
+		// replication support
+		_replication_set(kvs, key)
 	}
 	kvs.stat_set++
+
 	kvstores[kvs_num].mu.Unlock()
 
 	return tmp != nil
@@ -250,6 +262,9 @@ func OpAddKey(key string, data []byte, expires uint32) bool {
 		tmp := slab.Store(data, expires)
 		if tmp != nil {
 			kvs.key_map[key] = *tmp
+
+			// replication support
+			_replication_set(kvs, key)
 		} else {
 			can_add = false
 		}
@@ -284,6 +299,9 @@ func OpReplaceKey(key string, data []byte, expires uint32) bool {
 		tmp := slab.Store(data, expires)
 		if tmp != nil {
 			kvs.key_map[key] = *tmp
+
+			// replication support
+			_replication_set(kvs, key)
 		} else {
 			can_replace = false
 		}
@@ -349,6 +367,10 @@ func OpArithmetics(key string, data []byte, increment bool, expires *uint32) []b
 	}
 
 	kvs.key_map[key] = *updated_item
+
+	// replication support
+	_replication_set(kvs, key)
+
 	kvstores[kvs_num].mu.Unlock()
 	return value
 }
@@ -371,6 +393,8 @@ func OpTouch___NoCasUpdate(key string, expires uint32, cas *uint32) bool {
 	if ok := item.Touch___NoCasUpdate(expires); ok {
 		item.Expires = expires
 		kvs.key_map[key] = *item
+		_replication_touch(kvs, key)
+
 		return true
 	}
 
@@ -435,6 +459,8 @@ func OpTouch(key string, expires uint32, in_out_cas *uint32) bool {
 		}
 
 		kvs.key_map[key] = *item
+		_replication_touch(kvs, key)
+
 		return true
 	}
 

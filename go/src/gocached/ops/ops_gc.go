@@ -1,32 +1,42 @@
 package ops
 
 import (
+	"fmt"
 	"gocached/common"
 	"gocached/slab"
+	"replication"
 	"time"
 )
 
 func init() {
-
-	i := 0
 	go func() {
-
 		for {
-
-			time.Sleep(1 * time.Second)
-			runGC(i)
-
-			i++
-			if i >= len(kvstores) {
-				i = 0
-			}
+			RunHashGC(1000)
 		}
-
 	}()
-
 }
 
-func runGC(kvstore_num int) {
+func RunHashGC(sleep_ms time.Duration) string {
+
+	ret := ""
+	for i := 0; i < len(kvstores); i++ {
+		if sleep_ms > 0 {
+			time.Sleep(sleep_ms * time.Millisecond)
+		}
+		ts := time.Now().UnixNano()
+		gc_kept, gc_collected := runHashGCPartial(i)
+
+		took := int((time.Now().UnixNano() - ts) / 1000)
+		ret += fmt.Sprintf("Hash #%d, rebalance took %.2fms ... kept:%d collected:%d\n",
+			i, float64(took)/1000, gc_kept, gc_collected)
+	}
+
+	return ret
+}
+
+func runHashGCPartial(kvstore_num int) (int, int) {
+
+	replication_should_sync := replication.HashMapShouldSynchronize(kvstore_num)
 
 	global_op_mutex.Lock()
 	defer global_op_mutex.Unlock()
@@ -47,6 +57,18 @@ func runGC(kvstore_num int) {
 		if v.Expires >= now {
 			truncated_map[k] = v
 			gc_kept++
+
+			// send all items, if replica is freshly added
+			if replication_should_sync {
+
+				if v.Exists() {
+					kvstores[kvstore_num].mu.Lock()
+					_replication_set(kvs, k)
+					kvstores[kvstore_num].mu.Unlock()
+				}
+
+			}
+
 		} else {
 			gc_collected++
 		}
@@ -59,4 +81,6 @@ func runGC(kvstore_num int) {
 	kvs.stat_gc_passes++
 	kvs.key_map_old = truncated_map
 	kvs.mu.Unlock()
+
+	return gc_kept, gc_collected
 }

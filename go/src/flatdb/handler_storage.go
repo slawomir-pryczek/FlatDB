@@ -6,6 +6,7 @@ import (
 	"gocached/common"
 	"gocached/ops"
 	"handler_socket2"
+	"replication/replicator_client"
 	"strconv"
 )
 
@@ -24,7 +25,7 @@ func (this *HandleStore) GetActions() []string {
 	return []string{"mc-get", "mc-set", "mc-add", "mc-del", "mc-rep", "mc-touch",
 		"mc-inc", "mc-dec", "mc-exists",
 		"mca-get", "mca-insert", "mca-mget", "mca-fget", "mca-fpeek", "mca-cache",
-		"mc-maint"}
+		"mc-maint", "r-client"}
 }
 
 func (this *HandleStore) HandleAction(action string, data *handler_socket2.HSParams) string {
@@ -376,7 +377,7 @@ func (this *HandleStore) HandleAction(action string, data *handler_socket2.HSPar
 		operation := data.GetParam("op", "")
 
 		if operation == "flush" {
-			return ops.OpFlush()
+			return ops.OpFlush(true)
 		}
 
 		if operation == "store" {
@@ -391,6 +392,31 @@ func (this *HandleStore) HandleAction(action string, data *handler_socket2.HSPar
 			}
 
 			return "Rebalance Config (config param): " + _sett + "\n" + ops.OpRebalance(sett)
+		}
+
+		if operation == "hash-gc" {
+			return ops.RunHashGC(0)
+		}
+
+		if operation == "r-add" {
+			host := data.GetParam("host", "")
+			port, _ := strconv.Atoi(data.GetParam("port", ""))
+
+			ops.AddReplica(host, port)
+			return "Replica added"
+		}
+		if operation == "r-remove" {
+			host := data.GetParam("host", "")
+			port, _ := strconv.Atoi(data.GetParam("port", ""))
+
+			ops.RemoveReplica(host, port)
+			return "Replica removed"
+		}
+		if operation == "r-resync" {
+			host := data.GetParam("host", "")
+			port, _ := strconv.Atoi(data.GetParam("port", "0"))
+
+			return "Replica(s) re-synced: " + strconv.Itoa(ops.HashMapForceResync(host, port))
 		}
 
 		data.SetRespHeader("mc-error", "1")
@@ -436,6 +462,15 @@ func (this *HandleStore) HandleAction(action string, data *handler_socket2.HSPar
 		}
 
 		return strconv.Itoa(int(exp - uint32(common.TSNow())))
+	}
+
+	if action == "r-client" {
+		payload := data.GetParamBUnsafe("p", nil)
+		if payload == nil {
+			return "bad replication data!"
+		}
+		replicator_client.ProcessReplicationCall(payload)
+		return "ok"
 	}
 
 	return "G"
