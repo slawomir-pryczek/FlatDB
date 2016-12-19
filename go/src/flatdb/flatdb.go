@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const version = "FlatDB Server v3.001"
+const version = "FlatDB Server v3.003"
 
 func main() {
 
@@ -77,7 +77,7 @@ func main() {
 	}
 
 	fmt.Println("---")
-	fmt.Println("Welcome to", version, "2015-2016")
+	fmt.Println("Welcome to", version, "2015-2017")
 	fmt.Println("Visit https://github.com/slawomir-pryczek/FlatDB for more info and documentation")
 	fmt.Println("Configuration is found in conf.json")
 	fmt.Println("---")
