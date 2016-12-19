@@ -3,11 +3,9 @@
 
 FlatDB is modern memcached replacement, which is designed to be ideal for dynamic web applications. You can compile the server using scripts found in /bin directory, also precompiled server is available as "Release", please go to Release tab if you prefer to use precompiled version. PHP Client can be installed using composer.
 
-<center>
 <img src="./bin/img/screen-main.png" alt="Server status - summary" width='280'>&nbsp;
 <img src="./bin/img/screen-slab.png" alt="Server status - slab and item info" width='280'>&nbsp;
 <img src="./bin/img/screen-hashtable.png" alt="Server status - slab and item info" width='280'>
-</center>
 
 Firstly it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
 
