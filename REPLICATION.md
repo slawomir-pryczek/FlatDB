@@ -60,4 +60,24 @@ $fdb = new FlatDBCluster();
 ```
 ####Raid-10
 This is eassentially Raid X, that has same number of replicas as main servers, and where you can setup master-master replication between nodes to make recovery simpler. The only downside is, that it'll require twice as much servers. However as replicas use almost no CPU you could consider setting up replicas on same servers as master nodes, if you have enough memory (eg. S1 and B on server 1, S2 and C on server 2, S3 and A on server 3, etc.)
+```php
+FlatDB::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777"],
+  ["192.168.0.80:7777", "192.168.0.81:7777", "192.168.0.82:7777"]);
+...
+$fdb = new FlatDBCluster();
+```
 <img src="./bin/img/raid_10.png" width="950">
+
+
+####Raid-6
+This mode will require very little resources to provide replication, basically keys are stored on another node that's used in production. This is possible because keys are sharded by CRC and key X will always land on same node, and replication is not cascading (replication task(s) are just issued by slave ONCE, not forwarded to other replicas). Recovery is easy but will require to dynamically change the cluster layout for some time.
+
+For generating PHP code, it's easier than it looks like, you just copy main server list to replicas, and then in replicas, you cut first element of array and place it at the end.
+<img src="./bin/img/raid_6.png" width="950">
+
+```php
+FlatDB::addServers(["192.168.0.10:7777:10", "192.168.0.11", "192.168.0.12"],
+  ["192.168.0.81:7777", "192.168.0.82:7777", "192.168.0.80:7777"]);
+...
+$fdb = new FlatDBCluster();
+```
