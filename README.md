@@ -8,6 +8,7 @@ FlatDB is modern memcached replacement, which is designed to be ideal for dynami
 <img src="./bin/img/screen-hashtable.png" alt="Server status - slab and item info" width='280'>
 
 FlatDB supports sharding and [replication...](REPLICATION.md)
+Running FlatDB as systemd [service...](SERVICE.md)
 
 Firstly it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
 
