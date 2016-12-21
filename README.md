@@ -11,7 +11,7 @@ Advanced Topics:
 * FlatDB supports sharding and [replication...](REPLICATION.md)
 * Running FlatDB as systemd [service...](SERVICE.md)
 
-Firstly it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
+Firstly, for flatdb it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
 
 It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcache**d** extension for PHP7 (working memcache extension is available, tho). It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
 
