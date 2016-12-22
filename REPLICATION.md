@@ -55,7 +55,7 @@ $fdb = new FlatDBCluster();
 
 You can also use variation of this model, eg. one replica for each 2 main servers, sample code is below. Make sure that if you're defining replicas, we always want to have exactly same number of replicas defined, in PHP, as number of main servers so we know where the keys will land if main server is down.
 ```php
-FlatDBCluster::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777", "192.168.0.13:7777"],
+FlatDBCluster::addServers(["192.168.0.10:7777", "192.168.0.11:7777", "192.168.0.12:7777", "192.168.0.13:7777"],
   ["192.168.0.80:7777", "192.168.0.80:7777", "192.168.0.81:7777", "192.168.0.81:7777"]);
 ...
 $fdb = new FlatDBCluster();
@@ -63,7 +63,7 @@ $fdb = new FlatDBCluster();
 ####Raid-10
 This is eassentially Raid X, that has same number of replicas as main servers, and where you can setup master-master replication between nodes to make recovery simpler. The only downside is, that it'll require twice as much servers. However as replicas use almost no CPU you could consider setting up replicas on same servers as master nodes, if you have enough memory (eg. S1 and B on server 1, S2 and C on server 2, S3 and A on server 3, etc.)
 ```php
-FlatDBCluster::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777"],
+FlatDBCluster::addServers(["192.168.0.10:7777", "192.168.0.11:7777", "192.168.0.12:7777"],
   ["192.168.0.80:7777", "192.168.0.81:7777", "192.168.0.82:7777"]);
 ...
 $fdb = new FlatDBCluster();
@@ -78,7 +78,7 @@ For generating PHP code, it's easier than it looks like, you just copy main serv
 <img src="./bin/img/raid_6.png" width="950">
 
 ```php
-FlatDBCluster::addServers(["192.168.0.10:7777:10", "192.168.0.11", "192.168.0.12"],
+FlatDBCluster::addServers(["192.168.0.10:7777", "192.168.0.11", "192.168.0.12"],
   ["192.168.0.81:7777", "192.168.0.82:7777", "192.168.0.80:7777"]);
 ...
 $fdb = new FlatDBCluster();
