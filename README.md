@@ -7,7 +7,11 @@ FlatDB is modern memcached replacement, which is designed to be ideal for dynami
 <img src="./bin/img/screen-slab.png" alt="Server status - slab and item info" width='280'>&nbsp;
 <img src="./bin/img/screen-hashtable.png" alt="Server status - slab and item info" width='280'>
 
-Firstly it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
+Advanced Topics:
+* FlatDB supports sharding and [replication...](REPLICATION.md)
+* Running FlatDB as systemd [service...](SERVICE.md)
+
+Firstly, for flatdb it's written from scratch, taking modern hardware specifications into account, it's simple, has no legacy code such as ascii protocol support and has many features which are not supported or buggy in original memcached server.
 
 It was created mainly to deal with limitations of memcached LRU algorithm and lack of properly working memcache**d** extension for PHP7 (working memcache extension is available, tho). It's based on [HSServer](https://github.com/slawomir-pryczek/HSServer) which is generic server implementation you can use to easily expose services written in golang over network.
 
@@ -18,14 +22,15 @@ _Benchmark using PHP7, 2-250 byte items, 2xIntel(R) Xeon(R) CPU E5-2660 v3 @ 2.6
 #Server Deployment
 You can deploy using just using ```./flatdb-linux64```, please remember to enable execution bit using chmod.
  
-Production deployment with auto-restart
+Basic production deployment with auto-restart
 ```
 screen
 cd ./bin
 started=\`date +%Y%m%d@%H:%M\`; for i in {1..999999}; do ./flatdb-linux64 1>/dev/null 2>"error-$started-$i.log.txt"; sleep 10; done;
 ```
 
-If everything went ok you should be able to see server's status page: http://127.0.0.1:7778/?action=server-status
+If everything went ok you should be able to see server's status page [http://127.0.0.1:7778/?action=server-status](http://127.0.0.1:7778/?action=server-status).
+You can also run as a systemd service, please follow this guide for setting up [service...](SERVICE.md)
 
 # Client Library - Usage
 For FlatDB php api you can [read documentation here](DOCUMENTATION.md)
