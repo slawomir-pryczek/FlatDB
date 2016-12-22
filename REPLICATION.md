@@ -10,8 +10,10 @@ To have high-availablity you can use one of three replication models described l
 Servers are divided into groups, if you add >1 server into single group it'll form a sharded cluster. Keys will be distributed according to weight (10/5). 
 You can define many groups. Sharded or not.
 ```php
-FlatDB::addServer("192.168.10.1", "7777", 10, [group]);
-FlatDB::addServer("192.168.10.2", "7777", 5, [group]);
+$servers = [];
+$servers[] = "192.168.10.1:7777:10";
+$servers[] = "192.168.10.2:7777:5";
+FlatDB::addServer($servers, [group]);
 ...
 $fdb = new FlatDB([group]);
 ```
@@ -25,9 +27,9 @@ $fdb = new FlatDBCluster([group]);
 
 For creating replicated cluster, you need to use second parameter of addServers, number of replicas doesn't need to match number of main servers. In example below, each server has it's own replica. If you're using different weights **make sure** they're matching if you want keys from first server to be looked in first replica.
 ```php
-FlatDB::addServers(["192.168.10.1:7777:10", "192.168.10.2:7777:5"], ["192.168.10.101:7777:10", "192.168.10.102:7777:5"], [group]);
+FlatDBCluster::addServers(["192.168.10.1:7777:10", "192.168.10.2:7777:5"], ["192.168.10.101:7777:10", "192.168.10.102:7777:5"], [group]);
 ...
-$fdb = new FlatDB([group]);
+$fdb = new FlatDBCluster([group]);
 ```
 **NOTE:** This is just how the driver will look for the keys, it doesn't affect anything else(!). You need to also properly setup the server config within the cluster to be able to use replication in PHP. For sharding, it's done by PHP Driver alone... so if you want just sharding - nothing more to do.
 
@@ -44,7 +46,7 @@ There are several modes available, you can also have your own, or mix recommende
 This mode provides good perofmance, safety and requires one additional server. It'll put no additional stress on main servers, however one server is required that's able to keep all the shards. After configuring individual nodes according to the graphic, to access it from PHP you'll need following code
 
 ```php
-FlatDB::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777"], ["192.168.0.80:7777"]);
+FlatDBCluster::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777"], ["192.168.0.80:7777"]);
 ...
 $fdb = new FlatDBCluster();
 ```
@@ -53,7 +55,7 @@ $fdb = new FlatDBCluster();
 
 You can also use variation of this model, eg. one replica for each 2 main servers, sample code is below. Make sure that if you're defining replicas, we always want to have exactly same number of replicas defined, in PHP, as number of main servers so we know where the keys will land if main server is down.
 ```php
-FlatDB::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777", "192.168.0.13:7777"],
+FlatDBCluster::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777", "192.168.0.13:7777"],
   ["192.168.0.80:7777", "192.168.0.80:7777", "192.168.0.81:7777", "192.168.0.81:7777"]);
 ...
 $fdb = new FlatDBCluster();
@@ -61,7 +63,7 @@ $fdb = new FlatDBCluster();
 ####Raid-10
 This is eassentially Raid X, that has same number of replicas as main servers, and where you can setup master-master replication between nodes to make recovery simpler. The only downside is, that it'll require twice as much servers. However as replicas use almost no CPU you could consider setting up replicas on same servers as master nodes, if you have enough memory (eg. S1 and B on server 1, S2 and C on server 2, S3 and A on server 3, etc.)
 ```php
-FlatDB::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777"],
+FlatDBCluster::addServers(["192.168.0.10:7777:10", "192.168.0.11:7777", "192.168.0.12:7777"],
   ["192.168.0.80:7777", "192.168.0.81:7777", "192.168.0.82:7777"]);
 ...
 $fdb = new FlatDBCluster();
@@ -76,7 +78,7 @@ For generating PHP code, it's easier than it looks like, you just copy main serv
 <img src="./bin/img/raid_6.png" width="950">
 
 ```php
-FlatDB::addServers(["192.168.0.10:7777:10", "192.168.0.11", "192.168.0.12"],
+FlatDBCluster::addServers(["192.168.0.10:7777:10", "192.168.0.11", "192.168.0.12"],
   ["192.168.0.81:7777", "192.168.0.82:7777", "192.168.0.80:7777"]);
 ...
 $fdb = new FlatDBCluster();
