@@ -177,6 +177,7 @@ function progressReport($prg)
 	if ($max === false || $prg === false)
 	{
 		$max = $prg;
+		$lastoutput = false;
 		return;
 	}
 	

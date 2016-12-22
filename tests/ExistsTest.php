@@ -8,6 +8,12 @@ class TestExists extends TestCase
 	public function testExists()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "existstest|{$pid}|";
 
@@ -28,6 +34,12 @@ class TestExists extends TestCase
 	public function testExistsTTL()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "existstest|{$pid}|";
 

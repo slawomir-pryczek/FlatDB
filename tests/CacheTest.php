@@ -8,6 +8,12 @@ class TestCache extends TestCase
 	public function testCacheOk()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$key = "cachetest-".getmypid()."|".rand(1,999)."|";
 		$fdb->delete($key);
 		$fdb->delete("{$key}|2");

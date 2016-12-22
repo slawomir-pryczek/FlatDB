@@ -12,18 +12,38 @@ class FlatDB
 	private $group_id = [];
 	private $servers = [];
 	private $servers_weight_total = 0;
+	
+	public $last_error = false;
 
-	static public function addServer( $host, $port, $weight=0, $group=false)
+	static public function addServers ( $servers, $group=false )
 	{
-		if (self::$can_add_server !== true)
-			die("After creating first object, cannot add any more servers... please add all servers first!");
-
 		if ($group === false)
 			$group = "*";
-		if (!isset(self::$server_config[$group]))
-			self::$server_config[$group] = [];
-		self::$server_config[$group][] = [$host, $port, max(1, $weight)];
-		return true;
+		
+		if (!is_array($servers))
+			$servers = [$servers];
+		if (self::$can_add_server !== true && isset(self::$server_config[$group]))
+			die("After creating first object, cannot add any more servers... please add all servers first!");
+
+		$i = 0;
+		foreach ($servers as $v)
+		{
+			if (count(explode(":", $v)) == 1)
+			{
+				error_log("Server definition needs to be host:port:[weight], weight is optional");
+				continue;
+			}	
+			
+			list($host, $port, $weight) = explode(":", "{$v}:1");
+			$weight = max(0, $weight);
+
+			if (!isset(self::$server_config[$group]))
+				self::$server_config[$group] = [];
+			self::$server_config[$group][] = [$host, $port, max(1, $weight)];
+			$i++;
+		}
+
+		return $i>0;
 	}
 
 	function __construct( $group = false)
@@ -52,30 +72,6 @@ class FlatDB
 		self::$can_add_server = true;
 	}
 
-	public function addServers( $servers )
-	{
-		$added = 0;
-		foreach ($servers as $v)
-		{
-			if (!is_array($v) || count($v) < 2)
-			{
-				error_log("Incorrect server config, needed: (host, port, [weight], [group])");
-				continue;
-			};
-			if (!isset($v[2]))
-				$v[2] = 1;
-			if (!isset($v[3]))
-				$v[3] = false;
-			if (!isset($v[0]) || !isset($v[1]) || !isset($v[2]) || !isset($v[3]))
-				continue;
-
-			if ($this->addServer($v[0], $v[1], $v[2], $v[3]))
-				$added ++;
-		}
-
-		return $added > 0;
-	}
-
 	public function getClient($key, $id_only = false)
 	{
 		if ($id_only && count($this->servers) == 1)
@@ -93,7 +89,7 @@ class FlatDB
 			foreach ($this->servers as $use_num=>$use)
 			{
 				$cmppos += $use[2];
-				if ($cmppos >= $pos)
+				if ($cmppos > $pos)
 					break;
 			}
 		}
@@ -117,7 +113,7 @@ class FlatDB
 		$ret = [];
 		foreach ($this->servers as $num=>$use)
 		{
-			if ($number != false && $number != $num)
+			if ($number !== false && $number != $num)
 				continue;
 			
 			$key = "{$use[0]}:{$use[1]}";
@@ -395,6 +391,7 @@ class FlatDB
 	
 	public function getFirst(array $keys, &$out_key = false, &$out_cas = false, &$out_expires = false)
 	{
+		$this->last_error = false;
 		if (count($keys) == 0)
 			return false;
 
@@ -412,9 +409,13 @@ class FlatDB
 		{
 			$client = $this->getClient($chunk[0]);
 			$packet = ['action'=>'mca-fget', 'k'=>json_encode($chunk)];
+			$head = [];
 			$ret = $client->sendData($packet, $head);
 			if ($ret === false)
+			{
+				$this->last_error = "Connection error";
 				continue;
+			}	
 			
 			if (isset($head['mc-error']))
 				continue;
@@ -441,12 +442,13 @@ class FlatDB
 			return $val;
 		}
 		
-		$this->last_error = "no key found";
 		return false;
 	}
 	
 	public function getMulti(array $keys)
 	{
+		$this->last_error = false;
+		
 		$output = [];
 		if (count($keys) == 0)
 			return [];
@@ -487,6 +489,10 @@ class FlatDB
 					$output[$chunk[$item]] = ['data'=>substr($ret, $pos, $datasize), 'cas'=>$cas, 'e'=>$e];
 					$pos += $datasize;	
 				}
+			}
+			else
+			{
+				$this->last_error = "Connection error";
 			}
 		}
 		
@@ -583,7 +589,7 @@ class FlatDB
 
 		if (isset($head['mc-error']))
 		{
-			$this->last_error = "Connection error";
+			$this->last_error = $ret;
 			$out_cas = false;
 			$out_expires = false;
 			$this->cacheShouldRegenerate = false;

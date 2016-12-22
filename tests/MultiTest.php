@@ -8,6 +8,12 @@ class TestMulti extends TestCase
 	public function testGetMulti()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "testmul|{$pid}";
 
@@ -39,6 +45,12 @@ class TestMulti extends TestCase
 	public function testGetFirst()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "testmul|{$pid}|";
 

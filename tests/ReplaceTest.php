@@ -9,6 +9,12 @@ class TestReplace extends TestCase
 	public function testReplace()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "repl-test-XX|{$pid}|";
 

@@ -8,14 +8,20 @@ class TestAdd extends TestCase
 	public function testAddANDDelete()
 	{
 		$fdb = getFDB();
-		$pid = getmypid();
-		$key = "addtest|{$pid}";
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
 		
-		$fdb->delete($key);
-		$fdb->add($key, 0, 5);
+		$pid = getmypid();
 		progressReport(MAX_OPS);
 		for ($i = 0; $i < MAX_OPS; $i++)
 		{
+			$key = "addtest|{$pid}|{$i}/";
+			$fdb->delete($key);
+			$fdb->add($key, 0, 5);
+			
 			$this->assertEquals($fdb->touch($key, 5), true);
 			$this->assertEquals($fdb->delete($key), true);
 			$this->assertEquals($fdb->delete($key), false);
@@ -35,6 +41,12 @@ class TestAdd extends TestCase
 	public function testDecrement()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "dectest|{$pid}";
 

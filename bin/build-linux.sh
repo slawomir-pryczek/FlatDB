@@ -20,6 +20,7 @@ unlink ../../../bin/flatdb-linux  2>/dev/null
 unlink ../../../bin/server-status.html 2>/dev/null
 unlink ../../../bin/conf.json 2>/dev/null
 
+#go build -a -v flatdb.go handler_storage.go
 go build flatdb.go handler_storage.go
 mv flatdb ../../../bin/flatdb-linux
 

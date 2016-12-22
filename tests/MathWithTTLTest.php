@@ -8,6 +8,12 @@ class TestCAS extends TestCase
 	public function testCallbackReplace()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$usekey = "atomictest|{$pid}|";
 

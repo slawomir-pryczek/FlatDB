@@ -8,6 +8,12 @@ class TestSet extends TestCase
 	public function testSet()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "settest-XX|{$pid}|";
 
@@ -30,6 +36,12 @@ class TestSet extends TestCase
 	public function testSet2()
 	{
 		$fdb = getFDB();
+		if ($fdb === false)
+		{
+			$this->markTestSkipped('Flatdb not running');
+			return;
+		}
+		
 		$pid = getmypid();
 		$key = "settest-XX|{$pid}|";
 
