@@ -54,8 +54,7 @@ This code will connect to the server and read/set some keys, make sure port and 
 require __DIR__ . '/vendor/autoload.php';
 use FlatDB\FlatDB;
 
-FlatDB::addServer('192.168.10.1', '7777');
-
+FlatDB::addServers('192.168.10.1:7777');
 $fdb = new FlatDB();
 $fdb->add('random 1', rand(1,99999), 5);
 $fdb->set('random 2', rand(1,99999), 5);
