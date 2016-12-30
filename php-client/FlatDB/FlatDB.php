@@ -498,8 +498,56 @@ class FlatDB
 		
 		return $output;
 	}
-	
-	
+
+	public function getMultiSimple(array $keys)
+	{
+		$this->last_error = false;
+
+		$output = [];
+		if (count($keys) == 0)
+			return [];
+
+		$request_config = [];
+		foreach ($keys as $k=>$v)
+		{
+			$v = "{$v}";
+			$client_key = $this->getClient($v, true);
+			$request_config[$client_key][] = $v;
+
+			// pre-populate output table so we can keep iten order
+			$output[$v] = false;
+		}
+
+		foreach ($request_config as $chunk)
+		{
+			$client = $this->getClient($chunk[0]);
+			$packet = ['action'=>'mca-mget', 'k'=>json_encode($chunk)];
+
+			$head = [];
+			$ret = $client->sendData($packet, $head);
+			if ($ret !== false)
+			{
+				$pos = 0;
+				for ($item = 0; $item < count($chunk); $item++)
+				{
+					$dataheader = unpack("V1ds", substr($ret, $pos+8, 4));
+					$datasize = $dataheader['ds'];
+
+					$pos += 12;
+					$output[$chunk[$item]] = substr($ret, $pos, $datasize);
+					$pos += $datasize;
+				}
+			}
+			else
+			{
+				$this->last_error = "Connection error";
+			}
+		}
+
+		return $output;
+	}
+
+
 	const ADVI_INSERT_CAS_MISMATCH = 1;
 	const ADVI_INSERT_OUT_OF_MEMORY = 2;
 	const ADVI_CONN_ERROR = 2;

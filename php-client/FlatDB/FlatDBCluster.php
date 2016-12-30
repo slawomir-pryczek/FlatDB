@@ -351,9 +351,9 @@ class FlatDBCluster
 		{
 			$ret = $fdb->getMulti($keys);
 			$this->last_error = $fdb->last_error;
-		}	
+		}
 
-		if ($ret === false && ($fdb === false || $fdb->last_error === "Connection error"))
+		if ($fdb === false || $fdb->last_error === "Connection error")
 		{
 			self::$fdb[$this->group] = false;
 			$fdb = $this->getReplica();
@@ -361,6 +361,31 @@ class FlatDBCluster
 				return false;
 
 			$ret = $fdb->getMulti($keys);
+			$this->last_error = $fdb->last_error;
+		}
+
+		return $ret;
+	}
+
+	public function getMultiSimple(array $keys)
+	{
+		$ret = false;
+		$fdb = $this->getNode();
+
+		if ($fdb !== false)
+		{
+			$ret = $fdb->getMultiSimple($keys);
+			$this->last_error = $fdb->last_error;
+		}
+
+		if ($fdb === false || $fdb->last_error === "Connection error")
+		{
+			self::$fdb[$this->group] = false;
+			$fdb = $this->getReplica();
+			if ($fdb === false)
+				return false;
+
+			$ret = $fdb->getMultiSimple($keys);
 			$this->last_error = $fdb->last_error;
 		}
 
