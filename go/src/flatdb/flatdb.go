@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const version = "FlatDB Server v3.003"
+const version = "FlatDB Server v3.002"
 
 func main() {
 
