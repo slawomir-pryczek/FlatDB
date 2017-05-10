@@ -12,6 +12,7 @@ Description=FlatDB K/V datastore server
 
 [Service]
 LimitNOFILE=524288
+LimitMEMLOCK=1073741824
 ExecStart=/bin/sh -c 'cd /home/flatdb/; export GODEBUG=gctrace=1; started=`date --rfc-3339=seconds`; echo Starting Flatdb $started; ./flatdb 1>"log-$started.txt" 2>"error-$started.log.txt";'
 Type=simple
 PrivateNetwork=false
@@ -20,6 +21,8 @@ ProtectSystem=false
 ProtectHome=false
 KillMode=control-group
 Restart=always
+DefaultTasksMax=65536
+TasksMax=65536
 
 [Install]
 WantedBy=multi-user.target
