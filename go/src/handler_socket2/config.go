@@ -7,6 +7,8 @@ import "io/ioutil"
 import "path/filepath"
 import "encoding/json"
 import "strconv"
+import "net"
+import "strings"
 
 var Config = new(cfg)
 
@@ -73,13 +75,41 @@ func (this *cfg) parse() {
 	this.debug = this.config["DEBUG"] == "1"
 	this.verbose = this.config["VERBOSE"] == "1"
 
-	this.is_ready = true
-
 	//----
 
+	// add more interfaces based on what is currently available
+	ip_ifaces_uniq := make(map[string]bool)
+	bind_to_ip := strings.Split(this.config["BIND_TO"], ",")
+	for k, v := range bind_to_ip {
+		v = strings.Trim(v, "\r\n\t ")
+		if ip_ifaces_uniq[v] {
+			continue
+		}
+		bind_to_ip[k] = v
+		ip_ifaces_uniq[v] = true
+	}
+
+	for _, iface_match := range getMatchInterfaces() {
+
+		_key := "BIND_TO_" + iface_match
+		if v, exists := this.config[_key]; exists {
+
+			vv := strings.Split(v, ",")
+			fmt.Println("Conditional bind", _key, "adding -", vv)
+
+			for _, vvv := range vv {
+				vvv = strings.Trim(vvv, "\r\n\t ")
+				if ip_ifaces_uniq[vvv] {
+					continue
+				}
+				bind_to_ip = append(bind_to_ip, vvv)
+			}
+		}
+	}
+
+	this.is_ready = true
 	this.mu.Unlock()
 	return
-
 }
 
 func (this *cfg) Get(attr, def string) string {
@@ -131,4 +161,65 @@ func CfgIsDebug() bool {
 
 func CfgIsVerbose() bool {
 	return Config.verbose
+}
+
+func getMatchInterfaces() []string {
+
+	verbose := CfgIsVerbose()
+
+	match_ifaces := make([]string, 0)
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		fmt.Println("Cannot read interfaces (0x2) ", err.Error())
+		os.Exit(2)
+	}
+
+	for _, iface := range ifaces {
+
+		addrs, err := iface.Addrs()
+		if err != nil {
+			fmt.Println("Cannot read interfaces (0x3) ", err.Error())
+			os.Exit(3)
+		}
+
+		for _, addr := range addrs {
+
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			default:
+				continue
+			}
+
+			if ip.To4() != nil {
+				// ipv4 processing
+				pieces := strings.Split(ip.String(), ".")
+				if verbose {
+					fmt.Print("Interface V4 ", iface.Name, " ... ")
+				}
+
+				for i := 0; i < len(pieces); i++ {
+					_m := strings.Join(pieces[i:], ".")
+					match_ifaces = append(match_ifaces, _m)
+					if verbose {
+						fmt.Print(_m, " ")
+					}
+				}
+			} else {
+				if verbose {
+					fmt.Print("Interface V6 ", iface.Name, " ... ", ip.String())
+				}
+				match_ifaces = append(match_ifaces, ip.String())
+			}
+
+			if verbose {
+				fmt.Println()
+			}
+		}
+	}
+
+	return match_ifaces
 }
