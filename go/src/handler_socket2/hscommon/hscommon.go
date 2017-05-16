@@ -207,6 +207,26 @@ func (this *tablegen) RenderSorted(columns ...int) string {
 	return this.Render()
 }
 
+func (this *tablegen) RenderSortedByInt(columns ...int) string {
+
+	sort.Slice(this.items, func(i, j int) bool {
+
+		for _, col := range columns {
+			a, _ := strconv.Atoi(this.items[i]._usrdata[col])
+			b, _ := strconv.Atoi(this.items[j]._usrdata[col])
+
+			if a != b {
+				return a < b
+			}
+		}
+
+		return false
+	})
+
+	// we have re-sorted data, now render normally
+	return this.Render()
+}
+
 func (this *tablegen) RenderSortedRaw(scores []string) string {
 
 	slen := len(scores)
