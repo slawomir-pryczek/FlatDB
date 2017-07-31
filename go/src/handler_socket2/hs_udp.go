@@ -115,19 +115,20 @@ func GetStatusUDP() string {
 
 func startServiceUDP(bindTo string, handler handlerFunc) {
 
-	fmt.Printf("UDP Service starting : %s\n", bindTo)
-
 	udpAddr, err := net.ResolveUDPAddr("udp", bindTo)
 	if err != nil {
 		fmt.Printf("Error resolving address: %s, %s\n", bindTo, err)
 		return
 	}
-	fmt.Println(udpAddr)
+
 	listener, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		fmt.Printf("Error listening on UDP address: %s, %s\n", bindTo, err)
 		return
 	}
+
+	fmt.Printf("UDP Service started : %s\n", bindTo)
+	boundTo = append(boundTo, "udp:"+bindTo)
 
 	req_no := 0
 	source_buffer := make(map[string][]byte)

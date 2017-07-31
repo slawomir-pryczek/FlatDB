@@ -92,7 +92,7 @@ func startService(bindTo string, handler handlerFunc) {
 		return
 	}
 
-	fmt.Printf("Service started : %s\n", bindTo)
+	fmt.Printf("Socket Service started : %s\n", bindTo)
 	boundTo = append(boundTo, "socket:"+bindTo)
 
 	for {
