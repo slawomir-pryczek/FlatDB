@@ -23,8 +23,8 @@ func RemoveReplica(host string, port int) int {
 	return replica.RemoveReplica(host, port)
 }
 
-func GetStatus(_mode string) string {
-	return replica.GetStatus(_mode) + "<br>" + sync_task.GetStatus() + "<br>" + replicator_client.GetStatus()
+func GetStatus(_mode, replication_skip_info string) string {
+	return replica.GetStatus(_mode, replication_skip_info) + "<br>" + sync_task.GetStatus() + "<br>" + replicator_client.GetStatus()
 }
 
 type si struct {

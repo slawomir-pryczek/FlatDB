@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gocached/common"
 	"handler_socket2/byteslabs"
+	"handler_socket2/compress"
 	"sort"
 	"time"
 )
@@ -64,7 +65,7 @@ func (this *Sync_task) addPacket(buffer []byte) {
 	}
 
 	allocator := byteslabs.MakeAllocator()
-	data := byteslabs.Compress(buffer, allocator)
+	data := compress.CompressSimple(buffer, allocator)
 
 	ret := make([]byte, len(data)+4)
 	binary.LittleEndian.PutUint32(ret[0:4], uint32(len(buffer)))

@@ -12,7 +12,7 @@ func GetStatus() string {
 	tab := hscommon.NewTableGen("Packets", "Operations", "Processing Time", "Error Details")
 	tab.SetClass("tab")
 
-	_packets := fmt.Sprintf("Reveived: %d (%d errors)<br>Bytes: %s<br>Uncompressed: %s",
+	_packets := fmt.Sprintf("Received: %d (%d errors)<br>Bytes: %s<br>Uncompressed: %s",
 		stat_received_packets, stat_receive_error_decompr+stat_receive_error_len+stat_receive_error_packetsize,
 		hscommon.FormatBytes(uint64(stat_bytes_received)), hscommon.FormatBytes(uint64(stat_bytes_uncompressed)))
 

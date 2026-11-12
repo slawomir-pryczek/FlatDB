@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func GetStatus(_mode string) string {
+func GetStatus(_mode, replication_skip_info string) string {
 
 	help := "Replication info<br>"
 	help += "--------------------------<br>"
@@ -63,7 +63,7 @@ func GetStatus(_mode string) string {
 
 	ret := "<b>Flatdb Replication Plugin</b><br>"
 	ret += "This <span class='tooltip'>( ? ) Replication Plugin <div><pre>" + help + "</pre></div></span> supports hot-adding and hot-removing nodes, runs in master-slave mode.<br>"
-	ret += "Currently selected mode: <span class='tooltip'> ( ? ) " + _mode + " <div style='width: 600px;'>" + help_mode + "</div></span><br>"
+	ret += "Currently selected mode: <span class='tooltip'> ( ? ) " + _mode + " <div style='width: 600px;'>" + help_mode + "</div></span> ... " + replication_skip_info + "<br>"
 	ret += fmt.Sprintf("Sync Tasks Pending %d with %d Sending for %d Slaves<br>", _pending_tasks, _sending_tasks, _slave_count)
 
 	// ######

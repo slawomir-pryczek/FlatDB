@@ -232,6 +232,7 @@ func AddSyncTask(st *sync_task.Sync_task) {
 }
 
 // returns true if hash map needs to be synchronized with newly added replica
+// we need to always synchronize twice because we need to push MAIN, and OLD hash table's data
 func HashMapShouldSynchronize(kvstore_num int) bool {
 
 	should_sync := false
