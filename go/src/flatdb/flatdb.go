@@ -1,11 +1,11 @@
 package main
 
 import (
-	"handler_socket2"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2"
 
 	"fmt"
-	"handler_socket2/handle_echo"
-	"handler_socket2/handle_profiler"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/handle_echo"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/handle_profiler"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const version = "FlatDB Server v3.002"
+const version = "FlatDB Server v4.0"
 
 func main() {
 
@@ -77,7 +77,7 @@ func main() {
 	}
 
 	fmt.Println("---")
-	fmt.Println("Welcome to", version, "2015-2017")
+	fmt.Println("Welcome to", version, "2015-2026")
 	fmt.Println("Visit https://github.com/slawomir-pryczek/FlatDB for more info and documentation")
 	fmt.Println("Configuration is found in conf.json")
 	fmt.Println("---")
@@ -85,9 +85,9 @@ func main() {
 	// register handlers
 	handlers := []handler_socket2.ActionHandler{&HandleStore{}, &handle_profiler.HandleProfiler{},
 		&handle_echo.HandleEcho{}}
-	if len(handler_socket2.Config.Get("RUN_SERVICES", "")) > 0 && handler_socket2.Config.Get("RUN_SERVICES", "") != "*" {
+	if len(handler_socket2.Config().Get("RUN_SERVICES", "")) > 0 && handler_socket2.Config().Get("RUN_SERVICES", "") != "*" {
 		_h_modified := []handler_socket2.ActionHandler{}
-		_tmp := strings.Split(handler_socket2.Config.Get("RUN_SERVICES", ""), ",")
+		_tmp := strings.Split(handler_socket2.Config().Get("RUN_SERVICES", ""), ",")
 		supported := make(map[string]bool)
 		for _, v := range _tmp {
 			supported[strings.Trim(v, "\r\n \t")] = true
@@ -113,6 +113,6 @@ func main() {
 
 	// start the server
 	handler_socket2.RegisterHandler(handlers...)
-	handler_socket2.StartServer(strings.Split(handler_socket2.Config.Get("BIND_TO", ""), ","))
+	handler_socket2.StartServer(strings.Split(handler_socket2.Config().Get("BIND_TO", ""), ","))
 
 }

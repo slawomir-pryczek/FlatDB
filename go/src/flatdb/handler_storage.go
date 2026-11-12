@@ -1,12 +1,14 @@
 package main
 
 import (
+	"adserver2-go/gocached/common"
+	"adserver2-go/gocached/ops"
+	"adserver2-go/replication/replicator_client"
 	"encoding/binary"
 	"encoding/json"
-	"gocached/common"
-	"gocached/ops"
-	"handler_socket2"
-	"replication/replicator_client"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2"
+	"os"
+	"runtime/pprof"
 	"strconv"
 )
 
