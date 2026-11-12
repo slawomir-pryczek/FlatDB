@@ -9,6 +9,7 @@ import (
 	"replication"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -198,6 +199,21 @@ const REPLICATION_MODE_SAFE = 2
 const REPLICATION_MODE_OPTIMISTIC = 200
 
 var replication_mode = REPLICATION_MODE_OPTIMISTIC
+var replication_skip_prefix = ""
+var replication_skip_counter = uint64(0)
+
+func _replication_should_skip(key string) bool {
+
+	if replication_skip_prefix == "" {
+		return false
+	}
+
+	if strings.HasPrefix(key, replication_skip_prefix) {
+		atomic.AddUint64(&replication_skip_counter, 1)
+		return true
+	}
+	return false
+}
 
 // replication support for touch, only touch if no operation is already there, cases:
 // A. if item is previously deleted touch would have no effect
@@ -205,7 +221,7 @@ var replication_mode = REPLICATION_MODE_OPTIMISTIC
 // we can set item value and expiry time using single operation
 func _replication_touch(kvs *kvstore, key string) {
 
-	if kvs.sync_key == nil {
+	if kvs.sync_key == nil || _replication_should_skip(key) {
 		return
 	}
 
@@ -235,7 +251,7 @@ func _replication_touch(kvs *kvstore, key string) {
 // replication support for delete, process normally
 func _replication_delete(kvs *kvstore, key string) {
 
-	if kvs.sync_key == nil {
+	if kvs.sync_key == nil || _replication_should_skip(key) {
 		return
 	}
 	kvs.sync_key[key] = SYNC_KEY_DELETE
@@ -244,7 +260,7 @@ func _replication_delete(kvs *kvstore, key string) {
 // replication support for set, process normally
 func _replication_set(kvs *kvstore, key string) {
 
-	if kvs.sync_key == nil {
+	if kvs.sync_key == nil || _replication_should_skip(key) {
 		return
 	}
 	kvs.sync_key[key] = SYNC_KEY_SET
@@ -252,8 +268,15 @@ func _replication_set(kvs *kvstore, key string) {
 
 func init() {
 
-	_replicas_config := handler_socket2.Config.Get("SLAVE", "")
-	_rmode := handler_socket2.Config.Get("REPLICATION_MODE", "")
+	replication_skip_prefix = handler_socket2.Config().Get("REPLICATION_SKIP_PREFIX", "")
+	if len(replication_skip_prefix) > 0 {
+		fmt.Println("Replication skip prefix: ", replication_skip_prefix)
+	} else {
+		replication_skip_prefix = ""
+	}
+
+	_replicas_config := handler_socket2.Config().Get("SLAVE", "")
+	_rmode := handler_socket2.Config().Get("REPLICATION_MODE", "")
 	switch {
 	case _rmode == "OPTIMISTIC":
 		replication_mode = REPLICATION_MODE_OPTIMISTIC
@@ -297,6 +320,14 @@ func init() {
 	}()
 
 	handler_socket2.StatusPluginRegister(func() (string, string) {
-		return "Replication Plugin", replication.GetStatus(_rmode)
+
+		_skip_info := "Skip replication prefix: "
+		if replication_skip_prefix == "" {
+			_skip_info += "NONE"
+		} else {
+			_skip_info += fmt.Sprintf("%s (keys skipped: %d)", replication_skip_prefix, atomic.LoadUint64(&replication_skip_counter))
+		}
+
+		return "Replication Plugin", replication.GetStatus(_rmode, _skip_info)
 	})
 }

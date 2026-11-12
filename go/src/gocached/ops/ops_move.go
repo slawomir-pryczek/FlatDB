@@ -47,7 +47,7 @@ func init() {
 	go func() {
 
 		time.Sleep(1 * time.Second)
-		rebalance_time := handler_socket2.Config.GetI("REBALANCE_TIME", 60)
+		rebalance_time := handler_socket2.Config().GetI("REBALANCE_TIME", 60)
 
 		if rebalance_time == 0 {
 			fmt.Println("Auto rebalancer is disabled")
@@ -122,6 +122,10 @@ func ___domove(slab_class_no int, chunks []int) (int, int) {
 
 func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
 
+	// we're protected by global_op_mutex here so we actually CAN do write to
+	// kvs.key_map_old because the code which copies its address for processing
+	// also needs to acquire global_op_mutex, together with kvstores[kvs_num].mu.Lock()
+
 	ret, ret2 := 0, 0
 
 	kvstores[kvs_num].mu.Lock()
@@ -162,12 +166,11 @@ func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
 					delete(kvs.key_map, key)
 					delete(kvs.key_map_old, key)
 					continue
-
 				}
 			}
 
 			//fmt.Println(">>", tmp.GetSlabNo())
-			// we need to preserve CAS
+			// we need to preserve CAS, we store CAS in SLAB and in hashmap
 			if tmp != nil {
 				tmp.CAS = item.CAS
 				kvs.key_map[key] = *tmp
@@ -177,6 +180,7 @@ func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
 				ret2++
 				fmt.Println("Error moving item!")
 			}
+
 			delete(kvs.key_map_old, key)
 		}
 

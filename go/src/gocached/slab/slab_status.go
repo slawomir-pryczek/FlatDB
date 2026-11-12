@@ -16,7 +16,8 @@ func GetSlabInfo() string {
 	tg.SetClass("tab slabstats")
 
 	percentiles := hscommon.NewPercentileStats(slab_classes[0].slab_chunk_count)
-	stat_slabs_total := 0
+	stat_slabs_total_lo := 0
+	stat_slabs_total_hi := 0
 	prev_chunk_size := 0
 	for i := 0; i < len(slab_classes); i++ {
 
@@ -29,13 +30,16 @@ func GetSlabInfo() string {
 
 		stat_slab := [8]int{0, 0, 0, 0, 0, 0, 0, 0}
 		for i := 0; ; i++ {
+
 			slb.mu.RLock()
 			if i >= len(slb.slabs) {
 				slb.mu.RUnlock()
 				break
 			}
 			stat_items.beginChunk(slb.slab_chunk_count)
+			slb.mu.RUnlock()
 
+			slb.slabs[i].mu.Lock()
 			stat_slab[0] += slb.slabs[i].stat_alloc_size
 			stat_slab[1] += slb.slabs[i].stat_op_alloc
 			stat_slab[2] += slb.slabs[i].stat_op_delete
@@ -44,9 +48,8 @@ func GetSlabInfo() string {
 			stat_slab[5] += slb.slabs[i].stat_op_free_postponed
 			stat_slab[6] += slb.slabs[i].stat_gc_run_count
 			stat_slab[7] += slb.slabs[i].stat_gc_skip_count
-
 			memory := slb.slabs[i].storage
-			slb.mu.RUnlock()
+			slb.slabs[i].mu.Unlock()
 
 			now := uint32(hscommon.TSNow())
 			stat_used := 0
@@ -90,21 +93,27 @@ func GetSlabInfo() string {
 			stat_items.getUsed(), stat_items.getWasted(), buckets_str, stat_items.getAvgTTL(),
 			fmt.Sprintf("%d", stat_items.expired), fmt.Sprintf("%d", stat_items.exp_stats[0]), fmt.Sprintf("%d", stat_items.exp_stats[1]), fmt.Sprintf("%d", stat_items.exp_stats[2]), fmt.Sprintf("%d", stat_items.exp_stats[3]),
 			s_avg, s_lo_hi)
-		stat_slabs_total += len(slb.slabs)
+		if slb.slab_size_multiplier <= 1 {
+			stat_slabs_total_lo += len(slb.slabs)
+		} else {
+			stat_slabs_total_hi += len(slb.slabs)
+		}
 		slb.mu.RUnlock()
 
 	}
 
+	_more := slabs_max - atomic.LoadInt32(&slabs_allocated)
 	info := "<pre>"
-	info += fmt.Sprintf("<b>Slab statistics</b>:<br>Maximum number of slabs is: %d; We have room for <b style='color: green'>%d more</b>\n", slabs_max, slabs_max-stat_slabs_total)
+	info += fmt.Sprintf("<b>Slab statistics</b>:<br>Maximum number of slabs is: %d; We have room for <b style='color: green'>%d more</b>\n", slabs_max, _more)
+	info += fmt.Sprintf("LO memory classes: <b>%d</b>, HI memory classes: <b>%d</b><br>", stat_slabs_total_lo, stat_slabs_total_hi)
 
-	info += fmt.Sprintf("Factor is %.2f; Chunk sizes range [ %s - %s ]", factor, hscommon.FormatBytes(min_chunk_size), hscommon.FormatBytes(max_chunk_size))
+	info += fmt.Sprintf("Factor is %.2f; Minimum hunk size: %s. ", factor, hscommon.FormatBytes(conf_min_chunk_size))
 	info += "To see more details about chunk, hover the mouse over `chunk status` rows"
 	info += "</pre>"
 
 	ret := info + tg.Render()
 
-	tg = hscommon.NewTableGen("Class #", "Item Size", "Allocated", "Rebalances", "Store Failed")
+	tg = hscommon.NewTableGen("Class #", "Memory Size", "Allocated", "Rebalances", "Store Failed")
 	tg.SetClass("tab")
 
 	sum_storage, sum_sfail, sum_rebalances := 0, 0, 0
@@ -142,7 +151,7 @@ func GetSlabInfo() string {
 	_sf := atomic.LoadInt32(&slabs_freed)
 	ret += fmt.Sprintf("Slab allocations: %d, Slab frees: %d ... Allocated: %d/%d<br>", _sf+_sa, _sf, _sa, slabs_max)
 	ret += fmt.Sprintf("Total memory that we can allocate is %d x %s = %s ... allocated currently: %s<br>",
-		slabs_max, hscommon.FormatBytes(max_slab_size), hscommon.FormatBytes(slabs_max*max_slab_size), hscommon.FormatBytes(uint64(sum_storage)))
+		slabs_max, hscommon.FormatBytes(conf_slab_size), hscommon.FormatBytes(slabs_max*conf_slab_size), hscommon.FormatBytes(uint64(sum_storage)))
 
 	ret += tg.RenderHoriz(30)
 

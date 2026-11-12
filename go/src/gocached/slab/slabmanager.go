@@ -10,9 +10,10 @@ import (
 type slab_class struct {
 	slab_class_no uint8
 
-	slab_chunk_size  int
-	slab_chunk_count int
-	slab_margin      int
+	slab_chunk_size      int
+	slab_chunk_count     int
+	slab_margin          int
+	slab_size_multiplier int
 
 	slabs []*slab
 
@@ -40,11 +41,13 @@ type StoredItem struct {
 	CAS, Expires uint32
 }
 
-const min_chunk_size = 32
-const max_chunk_size = 1024 * 1024 * 2
-const max_slab_size = 1024 * 1024 * 3
-const factor = 0.12
-const slabs_max = 2000
+const conf_min_chunk_size = 26
+const conf_slab_size = 1024 * 1024
+const conf_slab_hi = 4
+const conf_slab_hi_multiplier = 6
+
+const factor = 0.11
+const slabs_max = 9000
 
 var slabs_allocated = int32(0)
 var slabs_freed = int32(0)
@@ -55,7 +58,14 @@ func init() {
 	slab_classes = make([]*slab_class, 0)
 
 	i := 0
-	for size := float64(min_chunk_size); int(size) < max_slab_size; {
+	max_slab_size := conf_slab_size
+	size_multiplier := 1
+	for size := float64(conf_min_chunk_size); int(size) < max_slab_size; {
+
+		if i >= conf_slab_hi {
+			max_slab_size = conf_slab_size * conf_slab_hi_multiplier
+			size_multiplier = conf_slab_hi_multiplier
+		}
 
 		_size := int(size)
 		_chunks := max_slab_size / _size
@@ -67,7 +77,7 @@ func init() {
 		size_adjusted := max_slab_size / _chunks
 		margin := max_slab_size - (size_adjusted * _chunks)
 
-		fmt.Printf("Slab class #%d, %d chunks, chunk size=%db (margin %db)\n", i, _chunks, size_adjusted, margin)
+		fmt.Printf("Slab class #%d, %d chunks, chunk size=%db (margin %db) [x%d]\n", i, _chunks, size_adjusted, margin, size_multiplier)
 
 		if int(_chunks) == 0 {
 			continue
@@ -78,6 +88,7 @@ func init() {
 		tmp.slab_chunk_size = size_adjusted
 		tmp.slab_chunk_count = _chunks
 		tmp.slab_margin = margin
+		tmp.slab_size_multiplier = size_multiplier
 
 		tmp.slabs = make([]*slab, 0)
 		slab_classes = append(slab_classes, &tmp)
@@ -91,10 +102,8 @@ func init() {
 		for {
 			time.Sleep(1500 * time.Millisecond)
 
-			//elxRun()
 			elxRun()
 			RunGC()
-
 		}
 	}()
 
@@ -152,7 +161,7 @@ func (this *slab_class) _addSlabUnsafe() *int {
 	if atomic.LoadInt32(&slabs_allocated) >= slabs_max {
 		return nil
 	}
-	atomic.AddInt32(&slabs_allocated, 1)
+	atomic.AddInt32(&slabs_allocated, int32(this.slab_size_multiplier))
 
 	mem_size := (this.slab_chunk_size * this.slab_chunk_count) + this.slab_margin
 	tmp := makeSlab(this.slab_chunk_size, this.slab_chunk_count, make([]byte, mem_size))

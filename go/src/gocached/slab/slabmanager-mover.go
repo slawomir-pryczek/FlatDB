@@ -180,8 +180,8 @@ func MoveSlabsFinish(_cfg [][]int) {
 			slab_class.stat_slab_freed++
 			slab.mu.Unlock()
 
-			atomic.AddInt32(&slabs_allocated, -1)
-			atomic.AddInt32(&slabs_freed, 1)
+			atomic.AddInt32(&slabs_allocated, int32(-slab_class.slab_size_multiplier))
+			atomic.AddInt32(&slabs_freed, int32(slab_class.slab_size_multiplier))
 		}
 
 		// DESC192811
@@ -239,7 +239,7 @@ func GetRebalanceSettings(rebalancer_settings_str string) ([][2]int, string) {
 	comment := ""
 
 	if rebalancer_settings_str == "" {
-		rebalancer_settings_str = handler_socket2.Config.Get("REBALANCE", "20-70")
+		rebalancer_settings_str = handler_socket2.Config().Get("REBALANCE", "20-70")
 	}
 
 	rebalancer_settings := strings.Split(rebalancer_settings_str, ",")
@@ -280,7 +280,7 @@ func GetRebalanceSettings(rebalancer_settings_str string) ([][2]int, string) {
 		if pos2 < 0 {
 			pos2 = 0
 		}
-		comment += fmt.Sprintf("FORSLAB%.2d %d(%d->%d) $$$$$$$ FORSLAB%.2d %d(%d->%d)\n", i, pos1, _tmp[pos1][0], _tmp[pos1][1],
+		comment += fmt.Sprintf("FORSLAB %.2d %d(%d->%d) $$$$$$$ FORSLAB%.2d %d(%d->%d)\n", i, pos1, _tmp[pos1][0], _tmp[pos1][1],
 			slab_classes_count-i-1, pos2, _tmp[pos2][0], _tmp[pos2][1])
 		settings[i] = _tmp[pos1]
 		settings[slab_classes_count-i-1] = _tmp[pos2]
