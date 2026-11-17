@@ -1,4 +1,4 @@
-package main
+package gocached
 
 // this will test slab object for overflows and
 //

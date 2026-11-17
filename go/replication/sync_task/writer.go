@@ -1,11 +1,11 @@
 package sync_task
 
 import (
+	"FlatDB/gocached/common"
 	"encoding/binary"
 	"fmt"
-	"gocached/common"
-	"handler_socket2/byteslabs"
-	"handler_socket2/compress"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/byteslabs"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/compress"
 	"sort"
 	"time"
 )

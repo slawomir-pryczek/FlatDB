@@ -2,7 +2,7 @@ package sync_task
 
 import (
 	"fmt"
-	"handler_socket2/hscommon"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/hscommon"
 	"time"
 )
 

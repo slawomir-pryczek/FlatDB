@@ -1,9 +1,9 @@
 package replica
 
 import (
+	"FlatDB/replication/sync_task"
 	"fmt"
 	"net"
-	"replication/sync_task"
 	"sync"
 	"time"
 )

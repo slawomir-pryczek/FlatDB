@@ -1,12 +1,12 @@
 package ops
 
 import (
+	"FlatDB/gocached/slab"
 	"bufio"
 	"encoding/binary"
 	"fmt"
-	"gocached/slab"
-	"handler_socket2/byteslabs"
-	"handler_socket2/hscommon"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/byteslabs"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/hscommon"
 	"io"
 	"os"
 	"sync"

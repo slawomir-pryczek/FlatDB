@@ -2,7 +2,7 @@ package slab
 
 import (
 	"fmt"
-	"handler_socket2"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/config"
 	"math"
 	"strconv"
 	"strings"
@@ -239,7 +239,7 @@ func GetRebalanceSettings(rebalancer_settings_str string) ([][2]int, string) {
 	comment := ""
 
 	if rebalancer_settings_str == "" {
-		rebalancer_settings_str = handler_socket2.Config().Get("REBALANCE", "20-70")
+		rebalancer_settings_str = config.Config().Get("REBALANCE", "20-70")
 	}
 
 	rebalancer_settings := strings.Split(rebalancer_settings_str, ",")

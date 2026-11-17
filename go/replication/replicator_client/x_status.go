@@ -2,7 +2,7 @@ package replicator_client
 
 import (
 	"fmt"
-	"handler_socket2/hscommon"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/hscommon"
 )
 
 func GetStatus() string {

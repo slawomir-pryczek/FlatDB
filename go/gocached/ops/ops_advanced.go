@@ -1,7 +1,7 @@
 package ops
 
 import (
-	"gocached/slab"
+	"FlatDB/gocached/slab"
 	"hash/crc32"
 	"sync/atomic"
 )

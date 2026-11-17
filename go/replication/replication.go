@@ -1,9 +1,9 @@
 package replication
 
 import (
-	"replication/replica"
-	"replication/replicator_client"
-	"replication/sync_task"
+	"FlatDB/replication/replica"
+	"FlatDB/replication/replicator_client"
+	"FlatDB/replication/sync_task"
 )
 
 const SYNC_KEY_DELETE = sync_task.SYNC_KEY_DELETE

@@ -1,9 +1,9 @@
 package ops
 
 import (
+	"FlatDB/gocached/slab"
 	"fmt"
-	"gocached/slab"
-	"handler_socket2"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/config"
 	"time"
 )
 
@@ -23,13 +23,13 @@ func OpRebalance(use_settings string) string {
 		}
 
 		ts := time.Now().UnixNano() / 1000
-		i_moved, i_failed := ___domove(slab_class_no, chunks)
+		i_moved, i_expired, i_failed := ___domove(slab_class_no, chunks)
 		took := (time.Now().UnixNano() / 1000) - ts
 
 		slab.MoveSlabsStat(uint16(slab_class_no), len(chunks), uint64(took), i_moved, i_failed)
 
-		_tmp := fmt.Sprintf("Slab Class #%.2d: Moving %d chunks (items moved: ok %d, failed %d) - took: %.2fms\n",
-			slab_class_no, len(chunks), i_moved, i_failed, float64(took)/1000.0)
+		_tmp := fmt.Sprintf("Slab Class #%.2d: Moving %d chunks (items moved:%d expired:%d failed:%d) - took: %.2fms\n",
+			slab_class_no, len(chunks), i_moved, i_expired, i_failed, float64(took)/1000.0)
 		ret += _tmp
 		fmt.Print(_tmp)
 	}
@@ -47,7 +47,7 @@ func init() {
 	go func() {
 
 		time.Sleep(1 * time.Second)
-		rebalance_time := handler_socket2.Config().GetI("REBALANCE_TIME", 60)
+		rebalance_time := config.Config().GetI("REBALANCE_TIME", 60)
 
 		if rebalance_time == 0 {
 			fmt.Println("Auto rebalancer is disabled")
@@ -64,9 +64,9 @@ func init() {
 
 }
 
-func ___domove(slab_class_no int, chunks []int) (int, int) {
+func ___domove(slab_class_no int, chunks []int) (int, int, int) {
 
-	ret, ret2 := 0, 0
+	stat_moved, stat_expired, stat_failed := 0, 0, 0
 
 	for kvstore_num := 0; kvstore_num < len(kvstores); kvstore_num++ {
 
@@ -85,7 +85,6 @@ func ___domove(slab_class_no int, chunks []int) (int, int) {
 
 		for k, v := range kvs.key_map_old {
 			if v.InSlabBetween(uint8(slab_class_no), slab_move_min, slab_move_max) {
-
 				if slab_no, exists := all_keys[k]; !exists || v.GetSlabNo() > slab_no {
 					all_keys[k] = v.GetSlabNo()
 				}
@@ -93,9 +92,12 @@ func ___domove(slab_class_no int, chunks []int) (int, int) {
 		}
 		//fmt.Println("X")
 		kvstores[kvstore_num].mu.RUnlock()
-		moved, failed := ___domove_keys(all_keys, kvstore_num)
-		ret += moved
-		ret2 += failed
+		fmt.Println(">>$$$>>", kvstores[kvstore_num])
+
+		_sm, _se, _sf := ___domove_keys(all_keys, kvstore_num)
+		stat_moved += _sm
+		stat_expired += _se
+		stat_failed += _sf
 	}
 
 	/*cs := crc32.ChecksumIEEE([]byte(key))
@@ -117,16 +119,15 @@ func ___domove(slab_class_no int, chunks []int) (int, int) {
 		atomic.AddUint64(&kvs.stat_atomic_get_nohit, 1)
 	}*/
 
-	return ret, ret2
+	return stat_moved, stat_expired, stat_failed
 }
 
-func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
+func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int, int) {
 
 	// we're protected by global_op_mutex here so we actually CAN do write to
 	// kvs.key_map_old because the code which copies its address for processing
 	// also needs to acquire global_op_mutex, together with kvstores[kvs_num].mu.Lock()
-
-	ret, ret2 := 0, 0
+	stat_moved, stat_expired, stat_failed := 0, 0, 0
 
 	kvstores[kvs_num].mu.Lock()
 	kvs := kvstores[kvs_num]
@@ -134,13 +135,13 @@ func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
 
 		item := getStoredItemUnsafe(kvs, key, false)
 		if item == nil {
-
 			if i, exists := kvs.key_map[key]; exists {
 				i.Delete()
 			}
 			if i, exists := kvs.key_map_old[key]; exists {
 				i.Delete()
 			}
+			stat_expired++
 			continue
 		}
 
@@ -154,17 +155,16 @@ func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
 
 		if data != nil {
 
+			// Store data again, it will move it to new (non-readonly) slab if current one is read-only
 			tmp := slab.Store(data, item.Expires)
-
-			//fmt.Print("FROM: ", item.GetSlabNo())
 
 			if tmp != nil {
 				if !tmp.ReplaceCAS(tmp.CAS, item.CAS) {
-
 					// cannot re-set the CAS, so this item expired!
 					// just delete references from the hash map!
 					delete(kvs.key_map, key)
 					delete(kvs.key_map_old, key)
+					stat_expired++
 					continue
 				}
 			}
@@ -175,9 +175,9 @@ func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
 				tmp.CAS = item.CAS
 				kvs.key_map[key] = *tmp
 
-				ret++
+				stat_moved++
 			} else {
-				ret2++
+				stat_failed++
 				fmt.Println("Error moving item!")
 			}
 
@@ -185,8 +185,7 @@ func ___domove_keys(all_keys map[string]uint16, kvs_num int) (int, int) {
 		}
 
 	}
-
 	kvstores[kvs_num].mu.Unlock()
 
-	return ret, ret2
+	return stat_moved, stat_expired, stat_failed
 }

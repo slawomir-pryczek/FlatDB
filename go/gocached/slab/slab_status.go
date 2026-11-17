@@ -3,7 +3,7 @@ package slab
 import (
 	"encoding/binary"
 	"fmt"
-	"handler_socket2/hscommon"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/hscommon"
 	"sync/atomic"
 )
 

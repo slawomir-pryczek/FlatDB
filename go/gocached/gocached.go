@@ -1,21 +1,17 @@
-package main
+package gocached
 
 import (
+	"FlatDB/gocached/common"
+	"FlatDB/gocached/slab"
 	"fmt"
-	"gocached/common"
-	"gocached/slab"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/hscommon"
 	"hash/crc32"
+	"math/rand/v2"
 	"os"
 	"runtime"
 	"runtime/pprof"
 	"sync"
 )
-
-/*type kvitem struct {
-	slab_class uint8
-	slab_num   uint16
-	chunk_id   uint16
-}*/
 
 type kvstore struct {
 	key_map     map[string]slab.StoredItem
@@ -27,7 +23,6 @@ type kvstore struct {
 var kvstores []kvstore
 
 func init() {
-
 	kvstores = make([]kvstore, runtime.NumCPU()*4)
 	for i := 0; i < len(kvstores); i++ {
 
@@ -36,12 +31,10 @@ func init() {
 		tmp.key_map_old = make(map[string]slab.StoredItem)
 
 		kvstores[i] = tmp
-
 	}
-
 }
 
-func OpSetKey(key string, data []byte, expires uint32) {
+func OpSetKeyTest(key string, data []byte, expires uint32) {
 
 	cs := crc32.ChecksumIEEE([]byte(key))
 	kvs := &kvstores[int(cs)%len(kvstores)]
@@ -57,7 +50,7 @@ func OpSetKey(key string, data []byte, expires uint32) {
 	kvs.mu.Unlock()
 }
 
-func OpGetKey(key string) []byte {
+func OpGetKeyTest(key string) []byte {
 
 	cs := crc32.ChecksumIEEE([]byte(key))
 	kvs := &kvstores[int(cs)%len(kvstores)]
@@ -97,7 +90,7 @@ func mainx() {
 	num_cpu := runtime.NumCPU() * 4
 	runtime.GOMAXPROCS(num_cpu)
 
-	ts := common.NewTimeSpan()
+	ts := hscommon.NewTimeSpan()
 
 	wg := sync.WaitGroup{}
 	total := 0
@@ -129,27 +122,27 @@ func main() {
 	num_cpu := runtime.NumCPU() * 4
 	runtime.GOMAXPROCS(num_cpu)
 
-	OpSetKey("abc", []byte{1, 2, 3}, uint32(common.TSNow()+10))
-	OpSetKey("abcd", []byte{2, 3}, uint32(common.TSNow()+10))
+	OpSetKeyTest("abc", []byte{1, 2, 3}, uint32(common.TSNow()+10))
+	OpSetKeyTest("abcd", []byte{2, 3}, uint32(common.TSNow()+10))
 
-	fmt.Println(OpGetKey("abc"))
-	fmt.Println(OpGetKey("abcd"))
+	fmt.Println(OpGetKeyTest("abc"))
+	fmt.Println(OpGetKeyTest("abcd"))
 
-	run_kvs_testing()
+	Run_kvs_testing()
 
 	return
 
 	run_slab_testing()
 }
 
-func run_kvs_testing() {
+func Run_kvs_testing() {
 
 	data := []byte(common.RandString(2 * 60))
 	data2 := []byte(common.RandString(2 * 2))
 	data3 := []byte(common.RandString(2 * 20))
 
 	wg := sync.WaitGroup{}
-	ts := common.NewTimeSpan()
+	ts := hscommon.NewTimeSpan()
 	total := 0
 
 	test := func() {
@@ -157,9 +150,9 @@ func run_kvs_testing() {
 		now := common.TSNow()
 		for ; i < 1000000; i++ {
 			k := common.RandString(5)
-			OpSetKey("1"+k, data, uint32(now+i%3))
-			OpSetKey("2"+k, data2, uint32(now+i%3))
-			OpSetKey("3"+k, data3, uint32(now+i%3))
+			OpSetKeyTest("1"+k, data, uint32(now+i%30+rand.IntN(300)))
+			OpSetKeyTest("2"+k, data2, uint32(now+i%30+rand.IntN(300)))
+			OpSetKeyTest("3"+k, data3, uint32(now+i%30+rand.IntN(300)))
 		}
 
 		total += i
@@ -189,7 +182,7 @@ func run_slab_testing() {
 		defer pprof.StopCPUProfile()
 	}
 
-	ts := common.NewTimeSpan()
+	ts := hscommon.NewTimeSpan()
 
 	wg := sync.WaitGroup{}
 	total := 0

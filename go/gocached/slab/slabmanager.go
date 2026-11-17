@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type slab_class struct {
@@ -100,8 +99,6 @@ func init() {
 	// automatic cleanup function!
 	go func() {
 		for {
-			time.Sleep(1500 * time.Millisecond)
-
 			elxRun()
 			RunGC()
 		}
@@ -237,7 +234,7 @@ func Store(data []byte, expires uint32) *StoredItem {
 
 	for chunk_no == -1 && false {
 
-		pos := slab_class.elxGCWalk()
+		pos, _ := slab_class.elxGCWalk()
 		if pos < 0 {
 			break
 		}

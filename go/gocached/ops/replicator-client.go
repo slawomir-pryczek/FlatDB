@@ -1,7 +1,7 @@
 package ops
 
 import (
-	"replication/replicator_client"
+	"FlatDB/replication/replicator_client"
 	"time"
 )
 

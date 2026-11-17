@@ -1,12 +1,13 @@
 package ops
 
 import (
+	"FlatDB/replication"
 	"fmt"
-	"handler_socket2"
-	"handler_socket2/byteslabs"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/byteslabs"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/config"
 	"hash/crc32"
 	"os"
-	"replication"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -268,22 +269,22 @@ func _replication_set(kvs *kvstore, key string) {
 
 func init() {
 
-	replication_skip_prefix = handler_socket2.Config().Get("REPLICATION_SKIP_PREFIX", "")
+	replication_skip_prefix = config.Config().Get("REPLICATION_SKIP_PREFIX", "")
 	if len(replication_skip_prefix) > 0 {
 		fmt.Println("Replication skip prefix: ", replication_skip_prefix)
 	} else {
 		replication_skip_prefix = ""
 	}
 
-	_replicas_config := handler_socket2.Config().Get("SLAVE", "")
-	_rmode := handler_socket2.Config().Get("REPLICATION_MODE", "")
+	_replicas_config := config.Config().Get("SLAVE", "")
+	_rmode := config.Config().Get("REPLICATION_MODE", "OPTIMISTIC")
 	switch {
 	case _rmode == "OPTIMISTIC":
 		replication_mode = REPLICATION_MODE_OPTIMISTIC
 	case _rmode == "SAFE":
 		replication_mode = REPLICATION_MODE_SAFE
 	default:
-		fmt.Fprintf(os.Stderr, "WARNING: Incorrect replication mode, reverting to OPTIMISTIC (default)")
+		fmt.Fprintf(os.Stderr, "WARNING: Incorrect replication mode, reverting to OPTIMISTIC (default)\n")
 		_rmode = "OPTIMISTIC"
 	}
 

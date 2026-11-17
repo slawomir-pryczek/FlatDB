@@ -1,10 +1,10 @@
 package ops
 
 import (
+	"FlatDB/gocached/slab"
 	"fmt"
-	"gocached/slab"
-	"handler_socket2"
-	"handler_socket2/hscommon"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2"
+	"github.com/slawomir-pryczek/HSServer/handler_socket2/hscommon"
 	"math"
 	"strings"
 )
