@@ -1,6 +1,7 @@
 package slab
 
 import (
+	"FlatDB/tools/ringlog"
 	"fmt"
 	"github.com/slawomir-pryczek/HSServer/handler_socket2/config"
 	"math"
@@ -68,6 +69,7 @@ func MoveSlabsStart(rbl_settings string) [][]int {
 		}
 	}
 
+	logger := ringlog.GetStaticLog("mover")
 	ret := make([]int, len(slab_classes))
 	for slab_class_no, s := range stat {
 
@@ -89,14 +91,12 @@ func MoveSlabsStart(rbl_settings string) [][]int {
 			continue
 		}
 
-		fmt.Print("Probing ", slab_class_no, ": ")
 		for space > 0 && s.slabs-ret[slab_class_no] > 2 /* minimum slabs that should be left */ {
 
 			space -= s.chunks_per_slab
 			ret[slab_class_no]++
 
 			perc_used := ((float64(used) * 100.0) / float64(space))
-			fmt.Printf("%.1f ", perc_used)
 
 			if (float64(used)*100.0)/float64(space) > float64(99.8) {
 				ret[slab_class_no]--
@@ -120,8 +120,15 @@ func MoveSlabsStart(rbl_settings string) [][]int {
 			}
 
 		}
-		fmt.Println("To remove SLABS: ", ret[slab_class_no])
 
+		space_before := s.slabs * s.chunks_per_slab
+		space_after := (s.slabs - ret[slab_class_no]) * s.chunks_per_slab
+		perc_before := ((float64(used) * 100.0) / float64(space_before))
+		perc_after := ((float64(used) * 100.0) / float64(space_after))
+
+		log := fmt.Sprintf("Class #%02d   Conf[<%02d%% -> %02d%%]   SpaceUsage:%04.1f%%->%04.1f%%   Slabs:%04d->%04d (Remove: %d)",
+			slab_class_no, conf_min_used_percent, conf_desired_usage, perc_before, perc_after, s.slabs, s.slabs-ret[slab_class_no], ret[slab_class_no])
+		logger.Write(log)
 	}
 
 	ret2 := make([][]int, len(slab_classes))

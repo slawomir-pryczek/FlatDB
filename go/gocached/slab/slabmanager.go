@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type slab_class struct {
@@ -98,6 +99,7 @@ func init() {
 
 	// automatic cleanup function!
 	go func() {
+		time.Sleep(1 * time.Second)
 		for {
 			elxRun()
 			RunGC()

@@ -90,9 +90,7 @@ func ___domove(slab_class_no int, chunks []int) (int, int, int) {
 				}
 			}
 		}
-		//fmt.Println("X")
 		kvstores[kvstore_num].mu.RUnlock()
-		fmt.Println(">>$$$>>", kvstores[kvstore_num])
 
 		_sm, _se, _sf := ___domove_keys(all_keys, kvstore_num)
 		stat_moved += _sm

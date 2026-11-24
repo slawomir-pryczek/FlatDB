@@ -2,6 +2,7 @@ package slab
 
 import (
 	"FlatDB/gocached/common"
+	"FlatDB/tools/ringlog"
 	"fmt"
 	"strconv"
 	"strings"
@@ -147,7 +148,7 @@ func elxRunSimple() {
 
 		deleted, log := slab_class.elxGCWalk()
 		if deleted > 0 {
-			fmt.Println(log)
+			ringlog.GetStaticLog("gcwalk").Write(log)
 		}
 	}
 
@@ -177,8 +178,9 @@ func elxRun() {
 	skip_slab_class := make([]bool, len(slab_classes)+1)
 	cleaned_up_anything := false
 
+	logger := ringlog.GetStaticLog("gcwalk")
 	for run := 0; run < 2; run++ {
-		fmt.Println(print_skiplist("Starting GCWalk, skiplist: ", skip_slab_class))
+		logger.Write(print_skiplist("Starting GCWalk, skiplist: ", skip_slab_class))
 
 		cleaned_up_anything = false
 		for k, slab_class := range slab_classes {
@@ -190,7 +192,7 @@ func elxRun() {
 			deleted, log := slab_class.elxGCWalk()
 			if deleted > 0 {
 				cleaned_up_anything = true
-				fmt.Println(log)
+				logger.Write(log)
 				time.Sleep(time.Second)
 			} else {
 				skip_slab_class[k] = true
